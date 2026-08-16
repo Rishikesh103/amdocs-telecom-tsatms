@@ -326,7 +326,7 @@ SELECT
     COUNT(*) AS total_incidents,
     COUNT(CASE WHEN tt.priority = 'CRITICAL' THEN 1 END) AS critical_count,
     COUNT(CASE WHEN tt.status IN ('RESOLVED', 'CLOSED') THEN 1 END) AS resolved_count,
-    AVG(EXTRACT(EPOCH FROM (COALESCE(tt.resolution_date, NOW()) - tt.created_date)) / 3600) AS avg_resolution_hours
+    AVG(TIMESTAMPDIFF(SECOND, tt.created_date, COALESCE(tt.resolution_date, NOW())) / 3600.0) AS avg_resolution_hours
 FROM trouble_ticket tt
 GROUP BY tt.category;
 

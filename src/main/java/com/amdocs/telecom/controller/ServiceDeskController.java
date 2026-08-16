@@ -4,11 +4,16 @@ import com.amdocs.telecom.dto.TicketSummaryDTO;
 import com.amdocs.telecom.model.*;
 import com.amdocs.telecom.service.*;
 import com.amdocs.telecom.service.impl.*;
+import com.amdocs.telecom.util.ConsoleUI;
 
-import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Service Desk Operations Console Controller
+ * Cyberpunk NOC & Incident Dispatch Edition
+ */
 public class ServiceDeskController {
 
     private final TroubleTicketService ticketService;
@@ -51,32 +56,45 @@ public class ServiceDeskController {
                     generateReports(scanner);
                     break;
                 case "9":
-                    System.out.println("✓ Logged out successfully.");
+                    ConsoleUI.printSuccess("Operator logged out. Console secured.");
                     return false;
                 default:
-                    System.out.println("Invalid option. Please try again.");
+                    ConsoleUI.printError("Invalid operations command.");
             }
         } catch (Exception e) {
-            System.err.println("Error processing Service Desk request: " + e.getMessage());
+            ConsoleUI.printError("Service Desk Exception: " + e.getMessage());
         }
         return true;
     }
 
     private void viewOpenTickets() throws Exception {
-        System.out.println("\n================================ OPEN TROUBLE TICKETS ================================");
+        ConsoleUI.printHeader("NOC INCIDENT QUEUE (ACTIVE TICKETS)", "Real-Time Telemetry & SLA Tracking");
         List<TicketSummaryDTO> list = ticketService.getAllOpenTickets();
         if (list.isEmpty()) {
-            System.out.println("No open tickets.");
+            ConsoleUI.printSuccess("All incident queues clear! 0 open tickets.");
             return;
         }
-        System.out.printf("%-5s %-12s %-20s %-10s %-12s %-12s %-18s\n", "ID", "TICKET #", "CUSTOMER", "PRIORITY", "STATUS", "SLA STATUS", "ASSIGNED TO");
-        System.out.println("--------------------------------------------------------------------------------------");
+        
+        System.out.printf("  %-5s %-16s %-20s %-16s %-18s %-15s %-18s\n",
+                "ID", "TICKET NUMBER", "CUSTOMER / ENTITY", "PRIORITY", "STATUS", "SLA HEALTH", "ENGINEER");
+        ConsoleUI.printDivider();
         for (TicketSummaryDTO dto : list) {
-            System.out.printf("%-5d %-12s %-20s %-10s %-12s %-12s %-18s\n",
-                    dto.getTicketId(), dto.getTicketNumber(),
+            String engName = dto.getAssignedEngineerName() != null ? 
+                    ConsoleUI.BRIGHT_WHITE + dto.getAssignedEngineerName() + ConsoleUI.RESET : 
+                    ConsoleUI.DIM + "⚡ UNASSIGNED" + ConsoleUI.RESET;
+            
+            String priorityStr = dto.getPriority() != null ? dto.getPriority().name() : null;
+            String statusStr = dto.getStatus() != null ? dto.getStatus().name() : null;
+            String slaStr = dto.getSlaStatus() != null ? dto.getSlaStatus().name() : null;
+
+            System.out.printf("  %-5d %s%-16s%s %-20s %-16s %-18s %-15s %s\n",
+                    dto.getTicketId(),
+                    ConsoleUI.BRIGHT_YELLOW, dto.getTicketNumber(), ConsoleUI.RESET,
                     dto.getCustomerName() != null ? dto.getCustomerName() : "N/A",
-                    dto.getPriority(), dto.getStatus(), dto.getSlaStatus(),
-                    dto.getAssignedEngineerName() != null ? dto.getAssignedEngineerName() : "Unassigned");
+                    ConsoleUI.getPriorityBadge(priorityStr),
+                    ConsoleUI.getStatusBadge(statusStr),
+                    ConsoleUI.getSLABadge(slaStr),
+                    engName);
         }
     }
 
@@ -86,34 +104,48 @@ public class ServiceDeskController {
         } catch (NumberFormatException e) {
             TroubleTicket t = ticketService.getTicketByNumber(input);
             if (t != null) return t.getTicketId();
-            throw new Exception("Ticket not found with number: " + input);
+            throw new Exception("Ticket not found with reference: " + input);
         }
     }
 
     private void assignEngineer(Scanner scanner) throws Exception {
-        System.out.print("\nEnter Ticket Number or ID to assign engineer: ");
+        ConsoleUI.printHeader("ENGINEER DISPATCH & ROUTING ENGINE", "Assign tickets based on workload & skills");
+        ConsoleUI.printPrompt("Enter Ticket Number or ID (e.g. TT-2026-004525)");
         int tktId = resolveTicketId(scanner.nextLine().trim());
-        System.out.println("Assignment Mode:");
-        System.out.println("1. Automatic Recommendation Engine (Java 8 Stream API)");
-        System.out.println("2. Manual Engineer Selection");
-        System.out.print("Choice: ");
+        
+        System.out.println("\n  Routing Strategy:");
+        System.out.println("  1. " + ConsoleUI.BRIGHT_CYAN + ConsoleUI.BOLD + "🤖 Intelligent Auto-Assignment" + ConsoleUI.RESET + " (Java 8 Stream: Least Workload + Highest Skill)");
+        System.out.println("  2. " + ConsoleUI.BRIGHT_WHITE + "👤 Manual Dispatch" + ConsoleUI.RESET + " (Select from Active Engineers)");
+        ConsoleUI.printPrompt("Select Strategy (1 or 2)");
         String mode = scanner.nextLine().trim();
 
         if ("1".equals(mode)) {
+            System.out.println(ConsoleUI.DIM + "  ⚡ Scanning network engineer fleet availability..." + ConsoleUI.RESET);
             NetworkEngineer assigned = ticketService.assignEngineerAuto(tktId);
-            System.out.println("\n✓ Auto-Assignment Successful!");
-            System.out.println("Assigned Engineer: " + assigned.getEngineerName() + " (" + assigned.getSpecialization() + ")");
+            ConsoleUI.printSuccess("Auto-Assignment Optimization Complete!");
+            ConsoleUI.printCard("DISPATCH CONFIRMATION", Arrays.asList(
+                    "Assigned Engineer : " + ConsoleUI.BRIGHT_GREEN + assigned.getEngineerName() + ConsoleUI.RESET,
+                    "Specialization    : " + assigned.getSpecialization(),
+                    "Region / Zone     : " + assigned.getRegion(),
+                    "Experience        : " + assigned.getExperienceYears() + " Years",
+                    "Active Workload   : " + (assigned.getActiveTicketCount() + 1) + " tickets"
+            ), ConsoleUI.BRIGHT_GREEN);
         } else {
             List<NetworkEngineer> engineers = engineerService.getAllEngineers();
-            System.out.println("\nAvailable Engineers:");
+            ConsoleUI.printSection("AVAILABLE NETWORK ENGINEERS");
+            System.out.printf("  %-4s %-20s %-22s %-12s %-12s\n", "ID", "ENGINEER NAME", "SPECIALIZATION", "ACTIVE TKT", "STATUS");
+            ConsoleUI.printDivider();
             for (NetworkEngineer e : engineers) {
-                System.out.printf("ID: %d | %s | Spec: %s | Active Tkts: %d | Availability: %s\n",
-                        e.getEngineerId(), e.getEngineerName(), e.getSpecialization(), e.getActiveTicketCount(), e.getAvailability());
+                String avail = "AVAILABLE".equalsIgnoreCase(e.getAvailability().name()) ?
+                        ConsoleUI.BRIGHT_GREEN + "● AVAILABLE" + ConsoleUI.RESET : 
+                        ConsoleUI.BRIGHT_YELLOW + "▲ BUSY" + ConsoleUI.RESET;
+                System.out.printf("  %-4d %-20s %-22s %-12d %s\n",
+                        e.getEngineerId(), e.getEngineerName(), e.getSpecialization(), e.getActiveTicketCount(), avail);
             }
-            System.out.print("Enter Engineer ID: ");
+            ConsoleUI.printPrompt("Enter Engineer ID to Assign");
             int engId = Integer.parseInt(scanner.nextLine().trim());
             ticketService.assignEngineerManual(tktId, engId, "SERVICE_DESK_ADMIN");
-            System.out.println("\n✓ Engineer manually assigned successfully.");
+            ConsoleUI.printSuccess("Engineer manual assignment registered.");
         }
     }
 
@@ -122,63 +154,71 @@ public class ServiceDeskController {
     }
 
     private void escalateTicket(String adminName, Scanner scanner) throws Exception {
-        System.out.print("\nEnter Ticket Number or ID to escalate: ");
+        ConsoleUI.printHeader("INCIDENT ESCALATION PROTOCOL", "Hierarchical Severity Level Elevation");
+        ConsoleUI.printPrompt("Enter Ticket Number or ID to escalate");
         int tktId = resolveTicketId(scanner.nextLine().trim());
-        System.out.println("Escalation Levels:");
-        System.out.println("1. TEAM_LEAD");
-        System.out.println("2. NETWORK_MANAGER");
-        System.out.println("3. OPERATIONS_MANAGER");
-        System.out.print("Select Level (1-3): ");
+        
+        System.out.println("  1. " + ConsoleUI.BRIGHT_YELLOW + "Level 1: TEAM_LEAD" + ConsoleUI.RESET);
+        System.out.println("  2. " + ConsoleUI.BRIGHT_RED + "Level 2: NETWORK_MANAGER" + ConsoleUI.RESET);
+        System.out.println("  3. " + ConsoleUI.BG_RED + ConsoleUI.BRIGHT_WHITE + " Level 3: OPERATIONS_MANAGER " + ConsoleUI.RESET);
+        ConsoleUI.printPrompt("Select Escalation Level (1-3)");
         String lvlChoice = scanner.nextLine().trim();
         EscalationLevel level = EscalationLevel.TEAM_LEAD;
         if ("2".equals(lvlChoice)) level = EscalationLevel.NETWORK_MANAGER;
         else if ("3".equals(lvlChoice)) level = EscalationLevel.OPERATIONS_MANAGER;
 
-        System.out.print("Enter Reason for Escalation: ");
+        ConsoleUI.printPrompt("Reason for Escalation");
         String reason = scanner.nextLine().trim();
 
         ticketService.escalateTicket(tktId, level, reason, adminName);
-        System.out.println("✓ Ticket escalated successfully to " + level);
+        ConsoleUI.printSuccess("Ticket escalated to " + level + " with high-priority status.");
     }
 
     private void updatePriority(String adminName, Scanner scanner) throws Exception {
-        System.out.print("\nEnter Ticket Number or ID: ");
+        ConsoleUI.printHeader("DYNAMIC PRIORITY & SLA OVERRIDE", "Recalculates SLA deadline automatically");
+        ConsoleUI.printPrompt("Enter Ticket Number or ID");
         int tktId = resolveTicketId(scanner.nextLine().trim());
-        System.out.print("Select New Priority (1. LOW, 2. MEDIUM, 3. HIGH, 4. CRITICAL): ");
+        
+        System.out.println("  1. " + ConsoleUI.getPriorityBadge("LOW"));
+        System.out.println("  2. " + ConsoleUI.getPriorityBadge("MEDIUM"));
+        System.out.println("  3. " + ConsoleUI.getPriorityBadge("HIGH"));
+        System.out.println("  4. " + ConsoleUI.getPriorityBadge("CRITICAL"));
+        ConsoleUI.printPrompt("Select New Priority (1-4)");
         String pChoice = scanner.nextLine().trim();
         Priority p = Priority.MEDIUM;
         if ("1".equals(pChoice)) p = Priority.LOW;
         else if ("3".equals(pChoice)) p = Priority.HIGH;
         else if ("4".equals(pChoice)) p = Priority.CRITICAL;
 
-        ticketService.updateTicketPriority(tktId, p, adminName, "Priority modified by admin");
-        System.out.println("✓ Priority updated to " + p + " and SLA deadline recalculated.");
+        ticketService.updateTicketPriority(tktId, p, adminName, "Priority updated by Service Desk Operator");
+        ConsoleUI.printSuccess("Priority reclassified to " + p + ". SLA target timer recalculated.");
     }
 
     private void monitorSLA() throws Exception {
-        System.out.println("\n========== REAL-TIME SLA MONITORING ==========");
+        ConsoleUI.printHeader("REAL-TIME SLA ENGINE AUDIT", "Scanning open tickets against threshold matrices");
         int count = slaMonitorService.checkAndProcessSLAs();
-        System.out.println("✓ SLA Audit completed. Alerts triggered: " + count);
+        ConsoleUI.printSuccess("Real-time SLA audit cycle complete. Critical alerts triggered: " + count);
     }
 
     private void closeTicket(String adminName, Scanner scanner) throws Exception {
-        System.out.print("\nEnter Ticket Number or ID to close: ");
+        ConsoleUI.printHeader("TICKET CLOSURE & SIGN-OFF", "Final quality assurance verification");
+        ConsoleUI.printPrompt("Enter Ticket Number or ID to close");
         int tktId = resolveTicketId(scanner.nextLine().trim());
-        System.out.print("Enter Closure Remarks: ");
+        ConsoleUI.printPrompt("Enter Closure Notes / Resolution Verification");
         String remarks = scanner.nextLine().trim();
         ticketService.closeTicket(tktId, remarks, adminName);
-        System.out.println("✓ Ticket closed successfully.");
+        ConsoleUI.printSuccess("Ticket #" + tktId + " marked as CLOSED in permanent records.");
     }
 
     private void generateReports(Scanner scanner) throws Exception {
-        System.out.println("\n========== GENERATE REPORTS ==========");
-        System.out.println("1. SLA Compliance Report");
-        System.out.println("2. Engineer Performance Report");
-        System.out.println("3. Incident Analysis Report");
-        System.out.print("Choice: ");
+        ConsoleUI.printHeader("ANALYTICS & AUDIT REPORTING ENGINE", "Export compliance, workload, and root causes");
+        System.out.println("  1. " + ConsoleUI.BRIGHT_CYAN + "SLA Compliance & Breach Analysis Report" + ConsoleUI.RESET);
+        System.out.println("  2. " + ConsoleUI.BRIGHT_YELLOW + "Network Engineer Workload & Performance Report" + ConsoleUI.RESET);
+        System.out.println("  3. " + ConsoleUI.BRIGHT_MAGENTA + "Incident Root-Cause & Categorization Report" + ConsoleUI.RESET);
+        ConsoleUI.printPrompt("Select Report Type (1-3)");
         String rChoice = scanner.nextLine().trim();
 
-        System.out.print("Format (CONSOLE / TXT / CSV): ");
+        ConsoleUI.printPrompt("Export Format (CONSOLE / TXT / CSV)");
         String format = scanner.nextLine().trim().toUpperCase();
 
         String report = "";
@@ -193,10 +233,11 @@ public class ServiceDeskController {
                 report = reportService.generateIncidentAnalysisReport(format);
                 break;
             default:
-                System.out.println("Invalid report choice.");
+                ConsoleUI.printError("Invalid report type specified.");
                 return;
         }
 
+        ConsoleUI.printSuccess("Report generated successfully!");
         System.out.println("\n" + report);
     }
 }

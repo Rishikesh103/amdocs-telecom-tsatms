@@ -24,4 +24,5 @@ public interface TroubleTicketService {
     boolean addResolution(int ticketId, String resolutionText, String rootCause, ResolutionCode resolutionCode, int engineerId) throws BusinessException, DAOException;
     boolean escalateTicket(int ticketId, EscalationLevel toLevel, String reason, String escalatedBy) throws BusinessException, DAOException;
     boolean closeTicket(int ticketId, String remarks, String closedBy) throws BusinessException, DAOException;
+    List<com.amdocs.telecom.model.TicketStatusHistory> getTicketHistory(int ticketId) throws com.amdocs.telecom.exception.DAOException;
 }

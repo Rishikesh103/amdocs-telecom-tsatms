@@ -18,7 +18,7 @@ public class DBConnection {
     // Database configuration
     private static final String DB_URL = "jdbc:mysql://localhost:3306/tsatms_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
     private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "krishna";
+    private static final String DB_PASSWORD = "RevNor";
     private static final String DB_DRIVER = "com.mysql.cj.jdbc.Driver";
 
     /**

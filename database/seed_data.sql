@@ -105,8 +105,8 @@ INSERT INTO trouble_ticket (ticket_number, customer_id, service_id, category, de
 ('TT-2026-004528', 8, 4, 'SIM_ISSUE', 'SIM card activation delay for new customer', 'LOW', 'LOW', 'ASSIGNED', 1, DATE_SUB(NOW(), INTERVAL 18 HOUR), DATE_ADD(NOW(), INTERVAL 30 HOUR), NULL, NULL, NULL, NULL),
 
 -- RESOLVED tickets
-('TT-2026-004519', 2, 4, 'CALL_DROP', 'Call drops on mobile line - intermittent issue', 'HIGH', 'MEDIUM', 'RESOLVED', 3, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY 20 HOUR), DATE_SUB(NOW(), INTERVAL 2 DAY 20 HOUR), 'Congestion on RAN cell', 'Capacity upgrade completed', 'CONFIGURATION_ERROR'),
-('TT-2026-004520', 9, 14, 'SLOW_DATA', 'Mobile data speed extremely slow during peak hours', 'MEDIUM', 'MEDIUM', 'CLOSED', 2, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY 12 HOUR), DATE_SUB(NOW(), INTERVAL 4 DAY 10 HOUR), 'Network congestion', 'Deployed additional capacity', 'NETWORK_CONGESTION'),
+('TT-2026-004519', 2, 4, 'CALL_DROP', 'Call drops on mobile line - intermittent issue', 'HIGH', 'MEDIUM', 'RESOLVED', 3, DATE_SUB(NOW(), INTERVAL 72 HOUR), DATE_SUB(NOW(), INTERVAL 68 HOUR), DATE_SUB(NOW(), INTERVAL 68 HOUR), 'Congestion on RAN cell', 'Capacity upgrade completed', 'CONFIGURATION_ERROR'),
+('TT-2026-004520', 9, 14, 'SLOW_DATA', 'Mobile data speed extremely slow during peak hours', 'MEDIUM', 'MEDIUM', 'CLOSED', 2, DATE_SUB(NOW(), INTERVAL 120 HOUR), DATE_SUB(NOW(), INTERVAL 108 HOUR), DATE_SUB(NOW(), INTERVAL 106 HOUR), 'Network congestion', 'Deployed additional capacity', 'NETWORK_CONGESTION'),
 
 -- CANCELLED ticket
 ('TT-2026-004530', 10, 15, 'OTHER', 'Customer changed mind - no longer required', 'LOW', 'LOW', 'CANCELLED', NULL, DATE_SUB(NOW(), INTERVAL 2 HOUR), NULL, NULL, 'Customer request', 'Cancelled per customer', NULL),
@@ -126,14 +126,14 @@ INSERT INTO ticket_status_history (ticket_id, old_status, new_status, changed_by
 (4, 'OPEN', 'ASSIGNED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 3 HOUR), 'Assigned to Rohit Sharma'),
 (4, 'ASSIGNED', 'IN_PROGRESS', 'eng1030', DATE_SUB(NOW(), INTERVAL 1 HOUR), 'Started investigation'),
 (8, 'OPEN', 'ASSIGNED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 18 HOUR), 'Assigned to Prakash Rao'),
-(9, 'OPEN', 'ASSIGNED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 3 DAY), 'Assigned to Rajesh Menon'),
-(9, 'ASSIGNED', 'IN_PROGRESS', 'eng1021', DATE_SUB(NOW(), INTERVAL 3 DAY - INTERVAL 6 HOUR), 'Started work'),
-(9, 'IN_PROGRESS', 'RESOLVED', 'eng1021', DATE_SUB(NOW(), INTERVAL 2 DAY 20 HOUR), 'Issue resolved'),
-(9, 'RESOLVED', 'CLOSED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 2 DAY 10 HOUR), 'Ticket closed'),
-(10, 'OPEN', 'ASSIGNED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 5 DAY), 'Assigned to Suresh Kumar'),
-(10, 'ASSIGNED', 'IN_PROGRESS', 'eng1015', DATE_SUB(NOW(), INTERVAL 4 DAY 20 HOUR), 'Troubleshooting started'),
-(10, 'IN_PROGRESS', 'RESOLVED', 'eng1015', DATE_SUB(NOW(), INTERVAL 4 DAY 10 HOUR), 'Resolved with capacity upgrade'),
-(10, 'RESOLVED', 'CLOSED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 4 DAY 8 HOUR), 'Ticket closed'),
+(9, 'OPEN', 'ASSIGNED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 72 HOUR), 'Assigned to Rajesh Menon'),
+(9, 'ASSIGNED', 'IN_PROGRESS', 'eng1021', DATE_SUB(NOW(), INTERVAL 66 HOUR), 'Started work'),
+(9, 'IN_PROGRESS', 'RESOLVED', 'eng1021', DATE_SUB(NOW(), INTERVAL 68 HOUR), 'Issue resolved'),
+(9, 'RESOLVED', 'CLOSED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 58 HOUR), 'Ticket closed'),
+(10, 'OPEN', 'ASSIGNED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 120 HOUR), 'Assigned to Suresh Kumar'),
+(10, 'ASSIGNED', 'IN_PROGRESS', 'eng1015', DATE_SUB(NOW(), INTERVAL 116 HOUR), 'Troubleshooting started'),
+(10, 'IN_PROGRESS', 'RESOLVED', 'eng1015', DATE_SUB(NOW(), INTERVAL 106 HOUR), 'Resolved with capacity upgrade'),
+(10, 'RESOLVED', 'CLOSED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 104 HOUR), 'Ticket closed'),
 (11, 'OPEN', 'CANCELLED', 'admin_sd2', DATE_SUB(NOW(), INTERVAL 2 HOUR), 'Cancelled per customer request'),
 (12, 'OPEN', 'ASSIGNED', 'admin_sd1', DATE_SUB(NOW(), INTERVAL 6 HOUR), 'Assigned to Prakash Rao'),
 (12, 'ASSIGNED', 'PENDING_CUSTOMER', 'eng1008', DATE_SUB(NOW(), INTERVAL 2 HOUR), 'Awaiting customer confirmation');
@@ -148,11 +148,11 @@ INSERT INTO escalation_history (ticket_id, from_level, to_level, reason, escalat
 -- 9. LOGIN HISTORY
 -- =============================================================================
 INSERT INTO login_history (user_id, login_time, logout_time, ip_address, status) VALUES
-(1, DATE_SUB(NOW(), INTERVAL 2 HOUR), DATE_SUB(NOW(), INTERVAL 1 HOUR 45 MINUTE), '192.168.1.100', 'SUCCESS'),
+(1, DATE_SUB(NOW(), INTERVAL 2 HOUR), DATE_SUB(NOW(), INTERVAL 105 MINUTE), '192.168.1.100', 'SUCCESS'),
 (1, DATE_SUB(NOW(), INTERVAL 1 HOUR), NULL, '192.168.1.100', 'SUCCESS'),
-(4, DATE_SUB(NOW(), INTERVAL 3 HOUR), DATE_SUB(NOW(), INTERVAL 2 HOUR 30 MINUTE), '10.0.0.50', 'SUCCESS'),
+(4, DATE_SUB(NOW(), INTERVAL 3 HOUR), DATE_SUB(NOW(), INTERVAL 150 MINUTE), '10.0.0.50', 'SUCCESS'),
 (4, DATE_SUB(NOW(), INTERVAL 2 HOUR), NULL, '10.0.0.50', 'SUCCESS'),
-(6, DATE_SUB(NOW(), INTERVAL 4 HOUR), DATE_SUB(NOW(), INTERVAL 3 HOUR 15 MINUTE), '10.0.0.100', 'SUCCESS'),
+(6, DATE_SUB(NOW(), INTERVAL 4 HOUR), DATE_SUB(NOW(), INTERVAL 195 MINUTE), '10.0.0.100', 'SUCCESS'),
 (6, DATE_SUB(NOW(), INTERVAL 2 HOUR), NULL, '10.0.0.100', 'SUCCESS');
 
 -- =============================================================================
@@ -174,14 +174,14 @@ INSERT INTO notification (recipient_id, ticket_id, message, notification_type, c
 ('cust100246', 2, 'Your ticket TT-2026-004522 (Slow Data) has been assigned to Engineer Rajesh Menon', 'ENGINEER_ASSIGNMENT', DATE_SUB(NOW(), INTERVAL 2 HOUR), 1),
 ('eng1008', 1, 'You have been assigned ticket TT-2026-004521 - CRITICAL priority', 'TICKET_ASSIGNMENT', DATE_SUB(NOW(), INTERVAL 45 MINUTE), 1),
 ('manager_nm1', 3, 'ALERT: Ticket TT-2026-004523 has been escalated to Team Lead level', 'ESCALATION', DATE_SUB(NOW(), INTERVAL 30 MINUTE), 0),
-('cust100248', 9, 'Your ticket TT-2026-004520 has been resolved. Thank you!', 'RESOLUTION', DATE_SUB(NOW(), INTERVAL 2 DAY 10 HOUR), 1);
+('cust100248', 9, 'Your ticket TT-2026-004520 has been resolved. Thank you!', 'RESOLUTION', DATE_SUB(NOW(), INTERVAL 58 HOUR), 1);
 
 -- =============================================================================
 -- 12. FEEDBACK
 -- =============================================================================
 INSERT INTO feedback (ticket_id, customer_id, rating, comments, created_date) VALUES
-(9, 2, 5, 'Excellent support! Issue resolved quickly and efficiently. Engineer was very professional.', DATE_SUB(NOW(), INTERVAL 2 DAY 8 HOUR)),
-(10, 9, 4, 'Good response time and proper resolution. Could have been faster.', DATE_SUB(NOW(), INTERVAL 4 DAY 6 HOUR));
+(9, 2, 5, 'Excellent support! Issue resolved quickly and efficiently. Engineer was very professional.', DATE_SUB(NOW(), INTERVAL 56 HOUR)),
+(10, 9, 4, 'Good response time and proper resolution. Could have been faster.', DATE_SUB(NOW(), INTERVAL 102 HOUR));
 
 -- =============================================================================
 -- COMMIT TRANSACTION

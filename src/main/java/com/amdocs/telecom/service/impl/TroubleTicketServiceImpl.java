@@ -372,4 +372,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         return true;
     }
+
+    @Override
+    public List<TicketStatusHistory> getTicketHistory(int ticketId) throws DAOException {
+        return historyDAO.findByTicketId(ticketId);
+    }
 }

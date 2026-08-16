@@ -4,6 +4,9 @@ REM Windows batch file to verify and build the complete system
 
 setlocal enabledelayedexpansion
 
+if not defined JAVA_HOME set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-8.0.502.7-hotspot"
+set "PATH=%JAVA_HOME%\bin;C:\maven\bin;C:\Program Files\MySQL\MySQL Server 8.4\bin;%PATH%"
+
 echo.
 echo ========================================================
 echo TSATMS - BUILD & VERIFICATION SCRIPT

@@ -1,53 +1,50 @@
 # =============================================
-# .gitignore for TSATMS Java Maven Project
+# .gitignore for TSATMS — Amdocs Capstone
 # =============================================
 
-# Maven build output
+# ---- Maven Build Output (NEVER commit these) ----
 target/
 *.class
 *.jar
 *.war
 *.ear
 
-# Maven wrapper
-.mvn/wrapper/maven-wrapper.jar
+# ---- Runtime Generated Reports ----
+reports/
+!reports/.gitkeep
 
-# IDE files — IntelliJ IDEA
+# ---- IDE Files — IntelliJ IDEA ----
 .idea/
 *.iml
 *.iws
 *.ipr
 out/
 
-# IDE files — Eclipse
+# ---- IDE Files — Eclipse ----
 .classpath
 .project
 .settings/
 bin/
 
-# IDE files — VS Code
+# ---- IDE Files — VS Code ----
 .vscode/
 
-# OS files
+# ---- OS Clutter ----
 .DS_Store
 Thumbs.db
 desktop.ini
+ehthumbs.db
 
-# Logs
+# ---- Logs ----
 *.log
 logs/
 
-# Reports output (generated at runtime)
-reports/*.csv
-reports/*.txt
+# ---- Sensitive Config (credentials) ----
+src/main/resources/config.properties
+src/main/resources/db.properties
+*.env
 
-# Database config — DO NOT commit credentials
-# If you have a db.properties or config.properties with passwords, add here:
-# src/main/resources/config.properties
-
-# Compiled Java source
-*.class
-
-# Package files
+# ---- Package/Archive Files ----
 *.zip
 *.tar.gz
+*.rar
