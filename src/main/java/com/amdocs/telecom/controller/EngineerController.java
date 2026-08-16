@@ -13,7 +13,7 @@ import java.util.Scanner;
 
 /**
  * Network Engineer Workbench Controller
- * Cyberpunk NOC & Diagnostic Terminal Edition
+ * Professional Enterprise Design
  */
 public class EngineerController {
 
@@ -48,10 +48,10 @@ public class EngineerController {
                     checkSLAStatus(engineerId);
                     break;
                 case "6":
-                    ConsoleUI.printSuccess("Workbench session terminated. Status saved.");
+                    ConsoleUI.printSuccess("Logged out successfully.");
                     return false;
                 default:
-                    ConsoleUI.printError("Invalid engineer command.");
+                    ConsoleUI.printError("Invalid option. Please try again.");
             }
         } catch (Exception e) {
             ConsoleUI.printError("Engineer Operation Failed: " + e.getMessage());
@@ -60,25 +60,25 @@ public class EngineerController {
     }
 
     private void viewAssignedTickets(int engineerId) throws Exception {
-        ConsoleUI.printHeader("MY ACTIVE INCIDENT QUEUE", "Tickets assigned for diagnostic & restoration");
+        ConsoleUI.printHeader("Assigned Trouble Tickets", "Active incidents assigned to engineer #" + engineerId);
         List<TroubleTicket> tickets = engineerService.getAssignedTickets(engineerId);
         if (tickets.isEmpty()) {
-            ConsoleUI.printSuccess("All assigned tickets resolved! Your active queue is empty.");
+            ConsoleUI.printSuccess("No assigned tickets. Your queue is clear.");
             return;
         }
         
-        System.out.printf("  %-5s %-16s %-16s %-16s %-18s %-18s\n",
-                "ID", "TICKET #", "CATEGORY", "PRIORITY", "STATUS", "SLA DEADLINE");
+        System.out.printf("  %-5s %-16s %-16s %-12s %-16s %-16s\n",
+                "ID", "TICKET NUMBER", "CATEGORY", "PRIORITY", "STATUS", "SLA DEADLINE");
         ConsoleUI.printDivider();
         for (TroubleTicket t : tickets) {
             String deadline = t.getSlaDeadline() != null ? t.getSlaDeadline().format(DATE_FMT) : "N/A";
-            System.out.printf("  %-5d %s%-16s%s %-16s %-16s %-18s %s%-18s%s\n",
+            System.out.printf("  %-5d %-16s %-16s %-12s %-16s %-16s\n",
                     t.getTicketId(),
-                    ConsoleUI.BRIGHT_YELLOW, t.getTicketNumber(), ConsoleUI.RESET,
+                    t.getTicketNumber(),
                     t.getCategory(),
                     ConsoleUI.getPriorityBadge(t.getPriority().name()),
                     ConsoleUI.getStatusBadge(t.getStatus().name()),
-                    ConsoleUI.DIM, deadline, ConsoleUI.RESET);
+                    deadline);
         }
     }
 
@@ -88,50 +88,50 @@ public class EngineerController {
         } catch (NumberFormatException e) {
             TroubleTicket t = ticketService.getTicketByNumber(input);
             if (t != null) return t.getTicketId();
-            throw new Exception("Ticket not found with reference: " + input);
+            throw new Exception("Ticket not found: " + input);
         }
     }
 
     private void updateTicketStatus(String engineerName, Scanner scanner) throws Exception {
-        ConsoleUI.printHeader("LIFECYCLE STATUS TRANSITION", "Update ticket state in real-time NOC telemetry");
+        ConsoleUI.printHeader("Update Ticket Status", "Transition ticket workflow status");
         ConsoleUI.printPrompt("Enter Ticket Number or ID");
         int tktId = resolveTicketId(scanner.nextLine().trim());
         
-        System.out.println("  1. " + ConsoleUI.getStatusBadge("IN_PROGRESS") + " (Engineer currently working)");
-        System.out.println("  2. " + ConsoleUI.getStatusBadge("PENDING_CUSTOMER") + " (Waiting for customer response/test)");
-        System.out.println("  3. " + ConsoleUI.getStatusBadge("RESOLVED") + " (Fix applied, ready for sign-off)");
-        ConsoleUI.printPrompt("Select Target Status (1-3)");
+        System.out.println("  [1] IN_PROGRESS (Investigation / Repair underway)");
+        System.out.println("  [2] PENDING_CUSTOMER (Awaiting customer input/confirmation)");
+        System.out.println("  [3] RESOLVED (Fix applied, pending closure)");
+        ConsoleUI.printPrompt("Select status (1-3)");
         String sChoice = scanner.nextLine().trim();
         TicketStatus newStatus = TicketStatus.IN_PROGRESS;
         if ("2".equals(sChoice)) newStatus = TicketStatus.PENDING_CUSTOMER;
         else if ("3".equals(sChoice)) newStatus = TicketStatus.RESOLVED;
 
-        ConsoleUI.printPrompt("Enter Operational Notes / Log");
+        ConsoleUI.printPrompt("Enter remarks");
         String remarks = scanner.nextLine().trim();
 
         ticketService.updateTicketStatus(tktId, newStatus, engineerName, remarks);
-        ConsoleUI.printSuccess("Ticket state transitioned to " + newStatus + " and audit log recorded.");
+        ConsoleUI.printSuccess("Status updated to " + newStatus + ".");
     }
 
     private void addResolution(int engineerId, Scanner scanner) throws Exception {
-        ConsoleUI.printHeader("INCIDENT RESOLUTION SUBMISSION", "Submit root cause analysis & restoration report");
-        ConsoleUI.printPrompt("Enter Ticket Number or ID to resolve");
+        ConsoleUI.printHeader("Submit Resolution & Root Cause", "Record resolution details for incident");
+        ConsoleUI.printPrompt("Enter Ticket Number or ID");
         int tktId = resolveTicketId(scanner.nextLine().trim());
         
-        ConsoleUI.printPrompt("Root Cause Analysis (RCA Summary)");
+        ConsoleUI.printPrompt("Enter Root Cause Analysis (RCA)");
         String rootCause = scanner.nextLine().trim();
         
-        ConsoleUI.printPrompt("Detailed Resolution Steps / Fix Applied");
+        ConsoleUI.printPrompt("Enter Resolution Description");
         String resText = scanner.nextLine().trim();
 
-        System.out.println("\n  Classification of Resolution Code:");
-        System.out.println("  1. HARDWARE_FAILURE (Replaced faulty card/chassis/router)");
-        System.out.println("  2. CONFIGURATION_ERROR (Repaired routing/BGP/VLAN misconfig)");
-        System.out.println("  3. NETWORK_CONGESTION (Traffic diverted / QoS tuned)");
-        System.out.println("  4. SOFTWARE_FAILURE (Patched daemon / memory leak restart)");
-        System.out.println("  5. FIBER_CUT (Physical splice restoration completed)");
-        System.out.println("  6. POWER_FAILURE (UPS / Generator power supply restored)");
-        ConsoleUI.printPrompt("Select Code (1-6)");
+        System.out.println("\nResolution Classification Code:");
+        System.out.println("  [1] HARDWARE_FAILURE");
+        System.out.println("  [2] CONFIGURATION_ERROR");
+        System.out.println("  [3] NETWORK_CONGESTION");
+        System.out.println("  [4] SOFTWARE_FAILURE");
+        System.out.println("  [5] FIBER_CUT");
+        System.out.println("  [6] POWER_FAILURE");
+        ConsoleUI.printPrompt("Select code (1-6)");
         String rChoice = scanner.nextLine().trim();
         ResolutionCode code = ResolutionCode.HARDWARE_FAILURE;
         switch (rChoice) {
@@ -143,7 +143,7 @@ public class EngineerController {
         }
 
         ticketService.addResolution(tktId, resText, rootCause, code, engineerId);
-        ConsoleUI.printSuccess("Resolution registered! Incident marked RESOLVED and engineer workload decremented.");
+        ConsoleUI.printSuccess("Resolution submitted. Ticket marked RESOLVED and engineer workload updated.");
     }
 
     private void viewTicketDetails(Scanner scanner) throws Exception {
@@ -154,40 +154,40 @@ public class EngineerController {
             ConsoleUI.printError("Ticket not found: " + num);
             return;
         }
-        ConsoleUI.printCard("DEEP TELEMETRY: " + t.getTicketNumber(), Arrays.asList(
+        ConsoleUI.printCard("Ticket Details: " + t.getTicketNumber(), Arrays.asList(
                 "Ticket ID    : " + t.getTicketId(),
-                "Incident Cat : " + t.getCategory(),
+                "Category     : " + t.getCategory(),
                 "Description  : " + t.getDescription(),
                 "Priority     : " + ConsoleUI.getPriorityBadge(t.getPriority().name()),
                 "Status       : " + ConsoleUI.getStatusBadge(t.getStatus().name()),
-                "SLA Target   : " + (t.getSlaDeadline() != null ? t.getSlaDeadline().format(DATE_FMT) : "N/A"),
-                "Root Cause   : " + (t.getRootCause() != null ? t.getRootCause() : "Under Active Analysis"),
-                "Resolution   : " + (t.getResolutionText() != null ? ConsoleUI.BRIGHT_GREEN + t.getResolutionText() + ConsoleUI.RESET : "Not resolved yet")
-        ), ConsoleUI.BRIGHT_CYAN);
+                "SLA Deadline : " + (t.getSlaDeadline() != null ? t.getSlaDeadline().format(DATE_FMT) : "N/A"),
+                "Root Cause   : " + (t.getRootCause() != null ? t.getRootCause() : "In progress"),
+                "Resolution   : " + (t.getResolutionText() != null ? t.getResolutionText() : "Pending resolution")
+        ));
     }
 
     private void checkSLAStatus(int engineerId) throws Exception {
-        ConsoleUI.printHeader("SLA DEADLINE HEALTH & RISK MATRIX", "Time remaining before SLA breach penalty");
+        ConsoleUI.printHeader("SLA Compliance Status", "Deadlines for assigned tickets");
         List<TroubleTicket> tickets = engineerService.getAssignedTickets(engineerId);
         if (tickets.isEmpty()) {
-            ConsoleUI.printSuccess("Zero active tickets. No SLA risk.");
+            ConsoleUI.printSuccess("No active tickets. All SLA targets compliant.");
             return;
         }
         
-        System.out.printf("  %-16s %-16s %-18s %-16s\n", "TICKET #", "PRIORITY", "SLA DEADLINE", "RISK ASSESSMENT");
+        System.out.printf("  %-16s %-12s %-18s %-16s\n", "TICKET NUMBER", "PRIORITY", "SLA DEADLINE", "SLA HEALTH");
         ConsoleUI.printDivider();
         for (TroubleTicket t : tickets) {
             String risk;
             if (t.getSlaDeadline() != null && t.getSlaDeadline().isBefore(LocalDateTime.now())) {
-                risk = ConsoleUI.BRIGHT_RED + "✖ BREACHED" + ConsoleUI.RESET;
+                risk = ConsoleUI.BRIGHT_RED + "BREACHED" + ConsoleUI.RESET;
             } else if (t.getSlaDeadline() != null && t.getSlaDeadline().minusMinutes(30).isBefore(LocalDateTime.now())) {
-                risk = ConsoleUI.BRIGHT_YELLOW + "▲ AT RISK (<30m)" + ConsoleUI.RESET;
+                risk = ConsoleUI.BRIGHT_YELLOW + "AT_RISK (<30m)" + ConsoleUI.RESET;
             } else {
-                risk = ConsoleUI.BRIGHT_GREEN + "● ON TRACK" + ConsoleUI.RESET;
+                risk = ConsoleUI.GREEN + "ON_TRACK" + ConsoleUI.RESET;
             }
             
-            System.out.printf("  %s%-16s%s %-16s %-18s %s\n",
-                    ConsoleUI.BRIGHT_YELLOW, t.getTicketNumber(), ConsoleUI.RESET,
+            System.out.printf("  %-16s %-12s %-18s %-16s\n",
+                    t.getTicketNumber(),
                     ConsoleUI.getPriorityBadge(t.getPriority().name()),
                     t.getSlaDeadline() != null ? t.getSlaDeadline().format(DATE_FMT) : "N/A",
                     risk);

@@ -12,7 +12,7 @@ import java.util.Scanner;
 
 /**
  * Executive Network Manager Dashboard Controller
- * Cyberpunk NOC & Telemetry Command Edition
+ * Professional Enterprise Design
  */
 public class ManagerController {
 
@@ -45,70 +45,69 @@ public class ManagerController {
                     manageEscalations(currentUser.getUsername(), scanner);
                     break;
                 case "6":
-                    ConsoleUI.printSuccess("Executive Session Concluded.");
+                    ConsoleUI.printSuccess("Logged out successfully.");
                     return false;
                 default:
-                    ConsoleUI.printError("Invalid managerial option.");
+                    ConsoleUI.printError("Invalid option. Please try again.");
             }
         } catch (Exception e) {
-            ConsoleUI.printError("Managerial Telemetry Failure: " + e.getMessage());
+            ConsoleUI.printError("Managerial Telemetry Error: " + e.getMessage());
         }
         return true;
     }
 
     private void viewDashboardMetrics() throws Exception {
         DashboardMetricsDTO m = managerService.getDashboardMetrics();
-        ConsoleUI.printHeader("EXECUTIVE NETWORK NOC TELEMETRY", "Real-Time Enterprise Health Indicators");
+        ConsoleUI.printHeader("Operational Health & KPI Summary", "Real-Time Network Operations Overview");
         
-        System.out.println("  " + ConsoleUI.BRIGHT_CYAN + ConsoleUI.BOLD + "INCIDENT METRICS OVERVIEW:" + ConsoleUI.RESET);
-        ConsoleUI.printMetricCard("Active Incidents", String.valueOf(m.getTotalOpenTickets()) + " Tickets", ConsoleUI.BRIGHT_CYAN, "📋");
-        ConsoleUI.printMetricCard("Critical Outages", String.valueOf(m.getCriticalIncidents()) + " Critical", ConsoleUI.BRIGHT_RED, "⚡");
-        ConsoleUI.printMetricCard("SLA At Risk (<30m)", String.valueOf(m.getSlaAtRisk()) + " At Risk", ConsoleUI.BRIGHT_YELLOW, "▲");
-        ConsoleUI.printMetricCard("SLA Breached", String.valueOf(m.getSlaBreached()) + " Penalized", ConsoleUI.RED, "✖");
+        ConsoleUI.printSection("Incident Metrics");
+        ConsoleUI.printMetric("Total Open Tickets", String.valueOf(m.getTotalOpenTickets()));
+        ConsoleUI.printMetric("Critical Incidents", String.valueOf(m.getCriticalIncidents()));
+        ConsoleUI.printMetric("SLA At Risk (<30m)", String.valueOf(m.getSlaAtRisk()));
+        ConsoleUI.printMetric("SLA Breached", String.valueOf(m.getSlaBreached()));
         
-        System.out.println("\n  " + ConsoleUI.BRIGHT_GREEN + ConsoleUI.BOLD + "FLEET RESOURCE CAPACITY:" + ConsoleUI.RESET);
-        ConsoleUI.printProgressBar("Staff Available", m.getAvailableEngineers(), m.getTotalEngineers(), ConsoleUI.BRIGHT_GREEN);
+        ConsoleUI.printSection("Resource Utilization");
+        ConsoleUI.printProgressBar("Engineer Staffing", m.getAvailableEngineers(), m.getTotalEngineers());
     }
 
     private void viewEngineerPerformance() throws Exception {
-        ConsoleUI.printHeader("ENGINEER FLEET WORKLOAD & SPECIALIZATION MATRIX", "Diagnostic Fleet Utilization");
+        ConsoleUI.printHeader("Engineer Fleet Workload & Performance", "Resource Allocation Matrix");
         List<EngineerWorkloadDTO> list = managerService.getEngineerPerformance();
         
-        System.out.printf("  %-10s %-20s %-24s %-12s %-14s %-14s\n",
-                "EMP CODE", "ENGINEER NAME", "SPECIALIZATION", "ACTIVE TKT", "CRITICAL TKT", "FLEET STATUS");
+        System.out.printf("  %-10s %-20s %-24s %-12s %-14s %-12s\n",
+                "EMP CODE", "ENGINEER NAME", "SPECIALIZATION", "ACTIVE TKT", "CRITICAL TKT", "STATUS");
         ConsoleUI.printDivider();
         for (EngineerWorkloadDTO dto : list) {
             String availStr = dto.getAvailability() != null ? dto.getAvailability().name() : "AVAILABLE";
             String status = "AVAILABLE".equalsIgnoreCase(availStr) ?
-                    ConsoleUI.BRIGHT_GREEN + "● AVAILABLE" + ConsoleUI.RESET : 
-                    ConsoleUI.BRIGHT_YELLOW + "▲ BUSY" + ConsoleUI.RESET;
+                    ConsoleUI.GREEN + "AVAILABLE" + ConsoleUI.RESET : 
+                    ConsoleUI.YELLOW + "BUSY" + ConsoleUI.RESET;
             
-            String critTag = dto.getCriticalTicketCount() > 0 ? 
-                    ConsoleUI.BRIGHT_RED + ConsoleUI.BOLD + dto.getCriticalTicketCount() + " ⚡" + ConsoleUI.RESET : 
-                    ConsoleUI.DIM + "0" + ConsoleUI.RESET;
-            
-            System.out.printf("  %s%-10s%s %-20s %-24s %-12d %-14s %s\n",
-                    ConsoleUI.BRIGHT_CYAN, dto.getEmployeeCode(), ConsoleUI.RESET,
-                    dto.getEngineerName(), dto.getSpecialization(),
-                    dto.getActiveTicketCount(), critTag, status);
+            System.out.printf("  %-10s %-20s %-24s %-12d %-14d %s\n",
+                    dto.getEmployeeCode(),
+                    dto.getEngineerName(),
+                    dto.getSpecialization(),
+                    dto.getActiveTicketCount(),
+                    dto.getCriticalTicketCount(),
+                    status);
         }
     }
 
     private void generateSLAReport(Scanner scanner) throws Exception {
-        ConsoleUI.printHeader("SLA COMPLIANCE AUDIT EXPORT", "Generate official telecom assurance reports");
+        ConsoleUI.printHeader("SLA Compliance Report", "Audit resolution time compliance");
         ConsoleUI.printPrompt("Select Format (CONSOLE / TXT / CSV)");
         String fmt = scanner.nextLine().trim().toUpperCase();
         String report = reportService.generateSlaComplianceReport(fmt);
-        ConsoleUI.printSuccess("SLA report generated successfully!");
+        ConsoleUI.printSuccess("Report generated successfully.");
         System.out.println("\n" + report);
     }
 
     private void generateIncidentReport(Scanner scanner) throws Exception {
-        ConsoleUI.printHeader("INCIDENT ROOT-CAUSE ANALYSIS EXPORT", "Historical failure categorization");
+        ConsoleUI.printHeader("Incident Analysis Report", "Historical breakdown by category");
         ConsoleUI.printPrompt("Select Format (CONSOLE / TXT / CSV)");
         String fmt = scanner.nextLine().trim().toUpperCase();
         String report = reportService.generateIncidentAnalysisReport(fmt);
-        ConsoleUI.printSuccess("Incident report generated successfully!");
+        ConsoleUI.printSuccess("Report generated successfully.");
         System.out.println("\n" + report);
     }
 
@@ -118,36 +117,36 @@ public class ManagerController {
         } catch (NumberFormatException e) {
             TroubleTicket t = ticketService.getTicketByNumber(input);
             if (t != null) return t.getTicketId();
-            throw new Exception("Ticket not found with reference: " + input);
+            throw new Exception("Ticket not found: " + input);
         }
     }
 
     private void manageEscalations(String managerName, Scanner scanner) throws Exception {
-        ConsoleUI.printHeader("ESCALATED INCIDENTS COMMAND QUEUE", "Direct Manager Intervention Queue");
+        ConsoleUI.printHeader("Escalated Incidents Queue", "Managerial Intervention Queue");
         List<TroubleTicket> escalations = managerService.getEscalationQueue();
         if (escalations.isEmpty()) {
-            ConsoleUI.printSuccess("Zero escalated incidents in queue. Normal operations.");
+            ConsoleUI.printSuccess("No escalated incidents pending intervention.");
             return;
         }
         
-        System.out.printf("  %-5s %-16s %-18s %-16s %-18s\n", "ID", "TICKET NUMBER", "CATEGORY", "PRIORITY", "CURRENT STATE");
+        System.out.printf("  %-5s %-16s %-18s %-12s %-16s\n", "ID", "TICKET NUMBER", "CATEGORY", "PRIORITY", "STATUS");
         ConsoleUI.printDivider();
         for (TroubleTicket t : escalations) {
-            System.out.printf("  %-5d %s%-16s%s %-18s %-16s %s\n",
+            System.out.printf("  %-5d %-16s %-18s %-12s %s\n",
                     t.getTicketId(),
-                    ConsoleUI.BRIGHT_YELLOW, t.getTicketNumber(), ConsoleUI.RESET,
+                    t.getTicketNumber(),
                     t.getCategory(),
                     ConsoleUI.getPriorityBadge(t.getPriority().name()),
                     ConsoleUI.getStatusBadge(t.getStatus().name()));
         }
 
-        ConsoleUI.printPrompt("Enter Ticket Number or ID to override dispatch");
+        ConsoleUI.printPrompt("Enter Ticket Number or ID to reassign");
         int tktId = resolveTicketId(scanner.nextLine().trim());
         
-        ConsoleUI.printPrompt("Enter Target Engineer ID for direct intervention");
+        ConsoleUI.printPrompt("Enter Target Engineer ID");
         int engId = Integer.parseInt(scanner.nextLine().trim());
 
         ticketService.assignEngineerManual(tktId, engId, managerName);
-        ConsoleUI.printSuccess("Managerial dispatch override executed. Ticket assigned to Engineer #" + engId);
+        ConsoleUI.printSuccess("Escalated ticket reassigned to Engineer #" + engId + ".");
     }
 }

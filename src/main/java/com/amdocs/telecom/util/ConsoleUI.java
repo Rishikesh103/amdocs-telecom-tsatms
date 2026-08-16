@@ -3,52 +3,29 @@ package com.amdocs.telecom.util;
 import java.util.List;
 
 /**
- * High-Tech Cyberpunk & Telecom NOC Terminal UI Framework (Java 8 Compatible)
- * Provides rich ANSI color palettes, box frames, status badges, progress bars, and formatted tables.
+ * Enterprise Professional CLI Design System
+ * Clean, minimalistic terminal interface inspired by modern corporate developer tools (GitHub CLI / Stripe CLI / Claude CLI).
  */
 public class ConsoleUI {
 
-    // =========================================================================
-    // ANSI COLOR & STYLE CODES
-    // =========================================================================
+    // ANSI Colors - Subtle & Professional
     public static final String RESET = "\u001B[0m";
     public static final String BOLD = "\u001B[1m";
     public static final String DIM = "\u001B[2m";
-    public static final String ITALIC = "\u001B[3m";
-    public static final String UNDERLINE = "\u001B[4m";
 
-    // Foreground Colors
-    public static final String BLACK = "\u001B[30m";
     public static final String RED = "\u001B[31m";
     public static final String GREEN = "\u001B[32m";
     public static final String YELLOW = "\u001B[33m";
     public static final String BLUE = "\u001B[34m";
-    public static final String MAGENTA = "\u001B[35m";
     public static final String CYAN = "\u001B[36m";
     public static final String WHITE = "\u001B[37m";
 
-    // Bright/Neon Colors
     public static final String BRIGHT_RED = "\u001B[91m";
     public static final String BRIGHT_GREEN = "\u001B[92m";
     public static final String BRIGHT_YELLOW = "\u001B[93m";
-    public static final String BRIGHT_BLUE = "\u001B[94m";
-    public static final String BRIGHT_MAGENTA = "\u001B[95m";
     public static final String BRIGHT_CYAN = "\u001B[96m";
     public static final String BRIGHT_WHITE = "\u001B[97m";
 
-    // Background Colors
-    public static final String BG_BLACK = "\u001B[40m";
-    public static final String BG_RED = "\u001B[41m";
-    public static final String BG_GREEN = "\u001B[42m";
-    public static final String BG_YELLOW = "\u001B[43m";
-    public static final String BG_BLUE = "\u001B[44m";
-    public static final String BG_MAGENTA = "\u001B[45m";
-    public static final String BG_CYAN = "\u001B[46m";
-    public static final String BG_DARK_GRAY = "\u001B[100m";
-
-    // =========================================================================
-    // JAVA 8 COMPATIBLE STRING REPEAT HELPER
-    // =========================================================================
     public static String repeatStr(String str, int count) {
         if (count <= 0) return "";
         StringBuilder sb = new StringBuilder(str.length() * count);
@@ -58,181 +35,154 @@ public class ConsoleUI {
         return sb.toString();
     }
 
-    // =========================================================================
-    // BANNER & HEADER METHODS
-    // =========================================================================
     public static void printMainBanner() {
-        System.out.println(BRIGHT_CYAN + BOLD);
-        System.out.println("  ████████╗███████╗ █████╗ ████████╗███╗   ███╗███████╗");
-        System.out.println("  ╚══██╔══╝██╔════╝██╔══██╗╚══██╔══╝████╗ ████║██╔════╝");
-        System.out.println("     ██║   ███████╗███████║   ██║   ██╔████╔██║███████╗");
-        System.out.println("     ██║   ╚════██║██╔══██║   ██║   ██║╚██╔╝██║╚════██║");
-        System.out.println("     ██║   ███████║██║  ██║   ██║   ██║ ╚═╝ ██║███████║");
-        System.out.println("     ╚═╝   ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝     ╚═╝╚══════╝" + RESET);
-        System.out.println(BRIGHT_MAGENTA + "  ┌─────────────────────────────────────────────────────────────┐" + RESET);
-        System.out.println(BRIGHT_MAGENTA + "  │ " + BRIGHT_WHITE + BOLD + "   TELECOM SERVICE ASSURANCE & INCIDENT COMMAND CENTER   " + BRIGHT_MAGENTA + "│" + RESET);
-        System.out.println(BRIGHT_MAGENTA + "  │ " + CYAN + "     Next-Gen Automated NOC & Trouble Ticketing v2.5     " + BRIGHT_MAGENTA + "│" + RESET);
-        System.out.println(BRIGHT_MAGENTA + "  └─────────────────────────────────────────────────────────────┘" + RESET);
+        System.out.println();
+        System.out.println(BRIGHT_CYAN + BOLD + "================================================================================" + RESET);
+        System.out.println(BRIGHT_WHITE + BOLD + "  Amdocs TSATMS | Telecom Service Assurance & Incident Management System" + RESET);
+        System.out.println(DIM + "  Enterprise Automated NOC & Trouble Ticketing Platform | v1.0.0" + RESET);
+        System.out.println(BRIGHT_CYAN + BOLD + "================================================================================" + RESET);
         System.out.println();
     }
 
     public static void printHeader(String title, String subtitle) {
-        int width = 70;
-        String line = repeatStr("═", width);
-        System.out.println("\n" + BRIGHT_CYAN + "╔" + line + "╗" + RESET);
-        
-        String centeredTitle = centerText(title.toUpperCase(), width);
-        System.out.println(BRIGHT_CYAN + "║" + BRIGHT_WHITE + BOLD + centeredTitle + BRIGHT_CYAN + "║" + RESET);
-        
+        System.out.println();
+        System.out.println(CYAN + BOLD + "--- [ " + title.toUpperCase() + " ] " + repeatStr("-", Math.max(2, 74 - title.length() - 8)) + RESET);
         if (subtitle != null && !subtitle.isEmpty()) {
-            String centeredSub = centerText(subtitle, width);
-            System.out.println(BRIGHT_CYAN + "║" + DIM + CYAN + centeredSub + BRIGHT_CYAN + "║" + RESET);
+            System.out.println(DIM + "    " + subtitle + RESET);
         }
-        System.out.println(BRIGHT_CYAN + "╚" + line + "╝" + RESET);
+        System.out.println();
     }
 
     public static void printSection(String title) {
-        System.out.println("\n" + BRIGHT_YELLOW + BOLD + "▶ " + title + RESET);
-        System.out.println(DIM + repeatStr("─", 50) + RESET);
+        System.out.println();
+        System.out.println(BRIGHT_WHITE + BOLD + title + ":" + RESET);
+        System.out.println(DIM + repeatStr("-", 45) + RESET);
     }
 
-    public static void printMenuOption(String key, String label, String icon) {
-        System.out.printf("  %s[%s]%s %s %s%-35s%s\n", 
-                BRIGHT_CYAN + BOLD, key, RESET, 
-                icon != null ? icon : "•",
-                BRIGHT_WHITE, label, RESET);
+    public static void printMenuOption(String key, String label) {
+        System.out.printf("  %s[%s]%s %s\n", BRIGHT_CYAN + BOLD, key, RESET, label);
     }
 
     public static void printPrompt(String label) {
-        System.out.print("\n" + BRIGHT_GREEN + BOLD + " ➜ " + BRIGHT_WHITE + label + ": " + BRIGHT_YELLOW);
+        System.out.print("\n" + BRIGHT_WHITE + label + ": " + RESET);
     }
 
-    // =========================================================================
-    // STATUS BADGES
-    // =========================================================================
+    // Professional Status Badges
     public static String getPriorityBadge(String priority) {
-        if (priority == null) return "[ N/A ]";
+        if (priority == null) return "N/A";
         switch (priority.toUpperCase()) {
             case "CRITICAL":
-                return BG_RED + BRIGHT_WHITE + BOLD + " ⚡ CRITICAL " + RESET;
+                return BRIGHT_RED + BOLD + "CRITICAL" + RESET;
             case "HIGH":
-                return BRIGHT_RED + BOLD + "[▲ HIGH]" + RESET;
+                return RED + "HIGH" + RESET;
             case "MEDIUM":
-                return BRIGHT_YELLOW + BOLD + "[● MEDIUM]" + RESET;
+                return YELLOW + "MEDIUM" + RESET;
             case "LOW":
-                return BRIGHT_GREEN + BOLD + "[▼ LOW]" + RESET;
+                return GREEN + "LOW" + RESET;
             default:
-                return "[" + priority + "]";
+                return priority;
         }
     }
 
     public static String getStatusBadge(String status) {
-        if (status == null) return "[ N/A ]";
+        if (status == null) return "N/A";
         switch (status.toUpperCase()) {
             case "OPEN":
-                return BRIGHT_CYAN + BOLD + "[ ✦ OPEN ]" + RESET;
+                return CYAN + "OPEN" + RESET;
             case "ASSIGNED":
-                return BRIGHT_BLUE + BOLD + "[ ➔ ASSIGNED ]" + RESET;
+                return BLUE + "ASSIGNED" + RESET;
             case "IN_PROGRESS":
-                return BRIGHT_YELLOW + BOLD + "[ ⚙ IN PROGRESS ]" + RESET;
+                return YELLOW + BOLD + "IN_PROGRESS" + RESET;
             case "PENDING_CUSTOMER":
-                return BRIGHT_MAGENTA + BOLD + "[ ⌛ PENDING CUST ]" + RESET;
+                return DIM + "PENDING_CUST" + RESET;
             case "ESCALATED":
-                return BG_RED + BRIGHT_WHITE + BOLD + " 🚨 ESCALATED " + RESET;
+                return BRIGHT_RED + BOLD + "ESCALATED" + RESET;
             case "RESOLVED":
-                return BRIGHT_GREEN + BOLD + "[ ✔ RESOLVED ]" + RESET;
+                return GREEN + BOLD + "RESOLVED" + RESET;
             case "CLOSED":
-                return DIM + WHITE + "[ 🔒 CLOSED ]" + RESET;
+                return DIM + "CLOSED" + RESET;
             case "CANCELLED":
-                return RED + "[ ✖ CANCELLED ]" + RESET;
+                return DIM + RED + "CANCELLED" + RESET;
             default:
-                return "[" + status + "]";
+                return status;
         }
     }
 
     public static String getSLABadge(String slaStatus) {
-        if (slaStatus == null) return "[ N/A ]";
+        if (slaStatus == null) return "N/A";
         switch (slaStatus.toUpperCase()) {
             case "COMPLIANT":
             case "ON_TRACK":
-                return BRIGHT_GREEN + "● ON TRACK" + RESET;
+                return GREEN + "ON_TRACK" + RESET;
             case "AT_RISK":
             case "SLA_WARNING":
-                return BRIGHT_YELLOW + BOLD + "▲ AT RISK" + RESET;
+                return BRIGHT_YELLOW + BOLD + "AT_RISK" + RESET;
             case "BREACHED":
             case "SLA_BREACH":
-                return BRIGHT_RED + BOLD + "✖ BREACHED" + RESET;
+                return BRIGHT_RED + BOLD + "BREACHED" + RESET;
             default:
                 return slaStatus;
         }
     }
 
-    // =========================================================================
-    // CARDS & BOXES
-    // =========================================================================
-    public static void printCard(String title, List<String> lines, String color) {
+    public static void printCard(String title, List<String> lines) {
         int maxLen = title.length();
         for (String l : lines) {
-            if (l.length() > maxLen) maxLen = l.length();
+            String stripped = stripAnsi(l);
+            if (stripped.length() > maxLen) maxLen = stripped.length();
         }
-        maxLen = Math.max(maxLen + 4, 45);
+        maxLen = Math.max(maxLen + 4, 50);
 
-        System.out.println(color + "╭─ " + BOLD + title + " " + repeatStr("─", Math.max(0, maxLen - title.length() - 3)) + "╮" + RESET);
+        System.out.println(CYAN + "+-- [ " + BOLD + title + RESET + CYAN + " ] " + repeatStr("-", Math.max(0, maxLen - title.length() - 8)) + "+" + RESET);
         for (String l : lines) {
-            System.out.printf(color + "│ " + RESET + "%-" + (maxLen - 2) + "s " + color + "│\n" + RESET, l);
+            int visualLen = stripAnsi(l).length();
+            int pad = Math.max(0, maxLen - visualLen - 2);
+            System.out.println(CYAN + "| " + RESET + l + repeatStr(" ", pad) + CYAN + " |" + RESET);
         }
-        System.out.println(color + "╰" + repeatStr("─", maxLen) + "╯" + RESET);
+        System.out.println(CYAN + "+" + repeatStr("-", maxLen) + "+" + RESET);
     }
 
-    public static void printMetricCard(String label, String value, String color, String icon) {
-        System.out.printf("  %s┌─────────────────────────────────────┐%s\n", color, RESET);
-        System.out.printf("  %s│ %s %-25s %s │%s\n", color, icon, label, color, RESET);
-        System.out.printf("  %s│ %s%s %-32s%s%s│%s\n", color, color, BOLD, value, RESET, color, RESET);
-        System.out.printf("  %s└─────────────────────────────────────┘%s\n", color, RESET);
+    public static void printMetric(String label, String value) {
+        System.out.printf("  * %-30s : %s%s%s\n", label, BOLD + BRIGHT_WHITE, value, RESET);
     }
 
-    public static void printProgressBar(String label, int current, int total, String color) {
-        int barLength = 25;
+    public static void printProgressBar(String label, int current, int total) {
+        int barLength = 20;
         double percent = total > 0 ? ((double) current / total) : 0;
         int filled = (int) (percent * barLength);
         
         StringBuilder bar = new StringBuilder();
         for (int i = 0; i < barLength; i++) {
-            if (i < filled) bar.append("█");
-            else bar.append("░");
+            if (i < filled) bar.append("#");
+            else bar.append("-");
         }
         
-        System.out.printf("  %-15s %s[%s]%s %3.0f%% (%d/%d)\n",
-                label, color, bar.toString(), RESET, percent * 100, current, total);
+        System.out.printf("  * %-20s : [%s] %3.0f%% (%d of %d)\n",
+                label, bar.toString(), percent * 100, current, total);
     }
 
-    // =========================================================================
-    // NOTIFICATIONS & MESSAGES
-    // =========================================================================
     public static void printSuccess(String msg) {
-        System.out.println("\n" + BRIGHT_GREEN + BOLD + " ✔ [SUCCESS] " + RESET + BRIGHT_WHITE + msg + RESET);
+        System.out.println(GREEN + "[SUCCESS] " + RESET + msg);
     }
 
     public static void printError(String msg) {
-        System.out.println("\n" + BRIGHT_RED + BOLD + " ✖ [ERROR] " + RESET + RED + msg + RESET);
+        System.out.println(RED + "[ERROR] " + RESET + msg);
     }
 
     public static void printWarning(String msg) {
-        System.out.println("\n" + BRIGHT_YELLOW + BOLD + " ⚠ [ALERT] " + RESET + YELLOW + msg + RESET);
+        System.out.println(YELLOW + "[WARNING] " + RESET + msg);
     }
 
     public static void printInfo(String msg) {
-        System.out.println(BRIGHT_CYAN + " ℹ [INFO] " + RESET + WHITE + msg + RESET);
+        System.out.println(CYAN + "[INFO] " + RESET + msg);
     }
 
     public static void printDivider() {
-        System.out.println(DIM + "──────────────────────────────────────────────────────────────────────────────────" + RESET);
+        System.out.println(DIM + "--------------------------------------------------------------------------------" + RESET);
     }
 
-    private static String centerText(String text, int width) {
-        if (text.length() >= width) return text.substring(0, width);
-        int left = (width - text.length()) / 2;
-        int right = width - text.length() - left;
-        return repeatStr(" ", left) + text + repeatStr(" ", right);
+    private static String stripAnsi(String text) {
+        if (text == null) return "";
+        return text.replaceAll("\u001B\\[[;\\d]*m", "");
     }
 }

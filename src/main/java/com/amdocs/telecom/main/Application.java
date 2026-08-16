@@ -13,8 +13,8 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 /**
- * Main application entry point for TSATMS (Telecom Service Assurance & Trouble Ticket Management System).
- * Cyberpunk NOC & Mission Control Console Edition
+ * Main Application Entry Point
+ * Amdocs TSATMS - Telecom Service Assurance & Incident Management System
  */
 public class Application {
     
@@ -54,9 +54,7 @@ public class Application {
                 eventProcessor = new NetworkEventProcessor();
                 eventProcessor.start();
                 
-                System.out.println(ConsoleUI.BRIGHT_GREEN + "  ● [DAEMON] Real-Time SLA Monitor Online (Tick: 30s)" + ConsoleUI.RESET);
-                System.out.println(ConsoleUI.BRIGHT_GREEN + "  ● [DAEMON] Event Processing Engine Active (BlockingQueue)" + ConsoleUI.RESET);
-                System.out.println(ConsoleUI.DIM + "  ─────────────────────────────────────────────────────────────" + ConsoleUI.RESET);
+                ConsoleUI.printInfo("Daemon services active: SLA Monitoring Scheduler (30s tick), Network Event Processor");
             } catch (Exception e) {
                 ConsoleUI.printInfo("Background services initialized.");
             }
@@ -89,15 +87,15 @@ public class Application {
         boolean running = true;
         
         while (running) {
-            ConsoleUI.printHeader("NOC SECURE ACCESS GATEWAY", "Select authentication profile to proceed");
+            ConsoleUI.printHeader("Main Access Gateway", "Select role profile to sign in");
             
-            ConsoleUI.printMenuOption("1", "Customer Self-Service Portal", "👤");
-            ConsoleUI.printMenuOption("2", "Service Desk Operations Console", "🎧");
-            ConsoleUI.printMenuOption("3", "Network Engineer Workbench", "⚡");
-            ConsoleUI.printMenuOption("4", "Executive Manager Telemetry", "📊");
-            ConsoleUI.printMenuOption("5", "Terminate Session & Exit", "🔴");
+            ConsoleUI.printMenuOption("1", "Customer Self-Service Portal");
+            ConsoleUI.printMenuOption("2", "Service Desk Operations Console");
+            ConsoleUI.printMenuOption("3", "Network Engineer Workbench");
+            ConsoleUI.printMenuOption("4", "Network Operations Manager Dashboard");
+            ConsoleUI.printMenuOption("5", "Exit System");
             
-            ConsoleUI.printPrompt("Select Portal (1-5)");
+            ConsoleUI.printPrompt("Select option (1-5)");
             String choice = scanner.nextLine().trim();
             
             switch (choice) {
@@ -114,85 +112,79 @@ public class Application {
                     attemptLogin("NETWORK_MANAGER");
                     break;
                 case "5":
-                    System.out.println("\n" + ConsoleUI.BRIGHT_MAGENTA + "  ┌─────────────────────────────────────────────────────────┐");
-                    System.out.println("  │   Thank you for using TSATMS Assurance System. Bye!     │");
-                    System.out.println("  └─────────────────────────────────────────────────────────┘" + ConsoleUI.RESET);
+                    System.out.println("\n" + ConsoleUI.CYAN + "Session closed. Thank you for using Amdocs TSATMS." + ConsoleUI.RESET);
                     running = false;
                     break;
                 default:
-                    ConsoleUI.printError("Invalid portal selection. Please choose 1 - 5.");
+                    ConsoleUI.printError("Invalid choice. Please select from 1 to 5.");
             }
         }
     }
     
     /**
      * Attempts to authenticate a user through the login process.
-     * Flow: CAPTCHA → Credentials → OTP → Role Dashboard
+     * Flow: CAPTCHA -> Credentials -> OTP -> Role Dashboard
      */
     private static void attemptLogin(String roleName) {
         try {
-            ConsoleUI.printHeader(roleName + " AUTHENTICATION", "Multi-Factor Zero-Trust Verification");
+            ConsoleUI.printHeader(roleName.replace("_", " ") + " Authentication", "Multi-Factor Identity Verification");
             
             // Step 1: Start login and show CAPTCHA
-            ConsoleUI.printSection("STEP 1/3: BOT MITIGATION & CAPTCHA");
+            ConsoleUI.printSection("Step 1: Security Challenge");
             String captchaCode = authService.startLogin();
+            System.out.println("  CAPTCHA Code: " + ConsoleUI.BOLD + captchaCode + ConsoleUI.RESET + " (verification required)");
             
-            System.out.println("  " + ConsoleUI.BG_DARK_GRAY + ConsoleUI.BRIGHT_YELLOW + ConsoleUI.BOLD + 
-                    " 🔐 CAPTCHA TOKEN: [ " + captchaCode + " ] " + ConsoleUI.RESET);
-            
-            ConsoleUI.printPrompt("Enter CAPTCHA Verification Code");
+            ConsoleUI.printPrompt("Enter CAPTCHA");
             String captchaResponse = scanner.nextLine().trim();
             
             if (!authService.validateCaptcha(captchaResponse)) {
-                ConsoleUI.printError("CAPTCHA verification failed! Authentication aborted.");
+                ConsoleUI.printError("CAPTCHA verification failed. Authentication canceled.");
                 return;
             }
-            ConsoleUI.printSuccess("CAPTCHA verified successfully.");
+            ConsoleUI.printSuccess("CAPTCHA verified.");
             
             // Step 2: Username and Password
-            ConsoleUI.printSection("STEP 2/3: CREDENTIALS CHALLENGE");
+            ConsoleUI.printSection("Step 2: Account Credentials");
             ConsoleUI.printPrompt("Username");
             String username = scanner.nextLine().trim();
             ConsoleUI.printPrompt("Password");
             String password = scanner.nextLine().trim();
             
             if (!authService.verifyCredentials(username, password)) {
-                ConsoleUI.printError("Access Denied: Invalid credentials provided.");
+                ConsoleUI.printError("Invalid username or password. Login canceled.");
                 return;
             }
-            ConsoleUI.printSuccess("Credentials validated against BCrypt security database.");
+            ConsoleUI.printSuccess("Credentials validated.");
             
             // Step 3: OTP Verification
-            ConsoleUI.printSection("STEP 3/3: TWO-FACTOR OTP VERIFICATION");
+            ConsoleUI.printSection("Step 3: Two-Factor OTP Verification");
             String otp = authService.getOTPForDisplay();
-            System.out.println("  " + ConsoleUI.BG_BLUE + ConsoleUI.BRIGHT_WHITE + ConsoleUI.BOLD + 
-                    " 📲 OTP DISPATCHED: [ " + otp + " ] " + ConsoleUI.RESET + ConsoleUI.DIM + " (Simulated SMS/Email Gateway)" + ConsoleUI.RESET);
-            System.out.println(ConsoleUI.DIM + "  Attempts Remaining: " + authService.getOTPRemainingAttempts() + ConsoleUI.RESET);
+            System.out.println("  One-Time Password (OTP): " + ConsoleUI.BOLD + otp + ConsoleUI.RESET + " [Simulated SMS/Email Gateway]");
+            System.out.println(ConsoleUI.DIM + "  Attempts remaining: " + authService.getOTPRemainingAttempts() + ConsoleUI.RESET);
             
-            ConsoleUI.printPrompt("Enter 6-Digit OTP");
+            ConsoleUI.printPrompt("Enter 6-digit OTP");
             String otpResponse = scanner.nextLine().trim();
             
             if (!authService.validateOTP(otpResponse)) {
-                ConsoleUI.printError("OTP challenge failed! Remaining attempts: " + authService.getOTPRemainingAttempts());
+                ConsoleUI.printError("OTP verification failed. Remaining attempts: " + authService.getOTPRemainingAttempts());
                 return;
             }
-            ConsoleUI.printSuccess("Identity Verified! Zero-Trust Handshake Complete.");
+            ConsoleUI.printSuccess("Identity successfully verified.");
             
             // Step 4: Complete login
             currentUser = authService.completeLogin(username);
             
-            ConsoleUI.printCard("ACTIVE SESSION GRANTED", Arrays.asList(
-                    "Operator   : " + currentUser.getUsername(),
+            ConsoleUI.printCard("Active Session Info", Arrays.asList(
+                    "User       : " + currentUser.getUsername(),
                     "Role       : " + currentUser.getRole().getDescription(),
-                    "Privilege  : " + currentUser.getRole().name(),
-                    "Status     : " + ConsoleUI.BRIGHT_GREEN + "AUTHENTICATED ●" + ConsoleUI.RESET
-            ), ConsoleUI.BRIGHT_CYAN);
+                    "Authority  : " + currentUser.getRole().name()
+            ));
             
             // Show role-based dashboard
             showRoleDashboard(currentUser.getRole().name());
             
         } catch (AuthenticationException e) {
-            ConsoleUI.printError("Authentication Exception: " + e.getMessage());
+            ConsoleUI.printError("Authentication Error: " + e.getMessage());
         }
     }
     
@@ -226,17 +218,17 @@ public class Application {
      * Customer Dashboard
      */
     private static boolean showCustomerDashboard() {
-        ConsoleUI.printHeader("CUSTOMER SELF-SERVICE PORTAL", "Logged in as: " + currentUser.getUsername());
-        ConsoleUI.printMenuOption("1", "View My Subscribed Services", "📱");
-        ConsoleUI.printMenuOption("2", "Raise New Trouble Ticket", "🎫");
-        ConsoleUI.printMenuOption("3", "View My Active Tickets", "📋");
-        ConsoleUI.printMenuOption("4", "Track Ticket Real-Time Status", "🔍");
-        ConsoleUI.printMenuOption("5", "View Complete Ticket Audit History", "📜");
-        ConsoleUI.printMenuOption("6", "View Push Notifications", "🔔");
-        ConsoleUI.printMenuOption("7", "Submit Service Feedback & Rating", "⭐");
-        ConsoleUI.printMenuOption("8", "Secure Sign Out", "🚪");
+        ConsoleUI.printHeader("Customer Portal", "Logged in: " + currentUser.getUsername());
+        ConsoleUI.printMenuOption("1", "View Subscribed Services");
+        ConsoleUI.printMenuOption("2", "Raise Trouble Ticket");
+        ConsoleUI.printMenuOption("3", "View My Tickets");
+        ConsoleUI.printMenuOption("4", "Track Ticket Status");
+        ConsoleUI.printMenuOption("5", "View Ticket Audit History");
+        ConsoleUI.printMenuOption("6", "View Notifications");
+        ConsoleUI.printMenuOption("7", "Submit Service Feedback");
+        ConsoleUI.printMenuOption("8", "Sign Out");
         
-        ConsoleUI.printPrompt("Enter Action (1-8)");
+        ConsoleUI.printPrompt("Select option (1-8)");
         String choice = scanner.nextLine().trim();
         return customerController.handleMenuChoice(choice, currentUser, scanner);
     }
@@ -245,18 +237,18 @@ public class Application {
      * Service Desk Administrator Dashboard
      */
     private static boolean showServiceDeskDashboard() {
-        ConsoleUI.printHeader("SERVICE DESK OPERATIONS COMMAND", "Operator: " + currentUser.getUsername());
-        ConsoleUI.printMenuOption("1", "View Active Trouble Tickets Queue", "📋");
-        ConsoleUI.printMenuOption("2", "Assign Engineer (AI-Auto / Manual)", "🤖");
-        ConsoleUI.printMenuOption("3", "Reassign Ticket Workload", "🔄");
-        ConsoleUI.printMenuOption("4", "Escalate Incident (Hierarchical)", "🚨");
-        ConsoleUI.printMenuOption("5", "Update Priority & Recalculate SLA", "⚡");
-        ConsoleUI.printMenuOption("6", "Run Live Real-Time SLA Audit", "⏱️");
-        ConsoleUI.printMenuOption("7", "Verify & Close Ticket", "🔒");
-        ConsoleUI.printMenuOption("8", "Generate Analytical Reports", "📈");
-        ConsoleUI.printMenuOption("9", "Secure Sign Out", "🚪");
+        ConsoleUI.printHeader("Service Desk Operations Console", "Operator: " + currentUser.getUsername());
+        ConsoleUI.printMenuOption("1", "View Open Trouble Tickets");
+        ConsoleUI.printMenuOption("2", "Assign Engineer (Auto / Manual)");
+        ConsoleUI.printMenuOption("3", "Reassign Ticket");
+        ConsoleUI.printMenuOption("4", "Escalate Ticket");
+        ConsoleUI.printMenuOption("5", "Update Priority");
+        ConsoleUI.printMenuOption("6", "Run Real-Time SLA Audit");
+        ConsoleUI.printMenuOption("7", "Close Ticket");
+        ConsoleUI.printMenuOption("8", "Generate Management Reports");
+        ConsoleUI.printMenuOption("9", "Sign Out");
         
-        ConsoleUI.printPrompt("Enter Action (1-9)");
+        ConsoleUI.printPrompt("Select option (1-9)");
         String choice = scanner.nextLine().trim();
         return serviceDeskController.handleMenuChoice(choice, currentUser, scanner);
     }
@@ -265,15 +257,15 @@ public class Application {
      * Network Engineer Dashboard
      */
     private static boolean showEngineerDashboard() {
-        ConsoleUI.printHeader("NETWORK ENGINEER WORKBENCH", "Engineer: " + currentUser.getUsername());
-        ConsoleUI.printMenuOption("1", "View My Assigned Incident Queue", "🔧");
-        ConsoleUI.printMenuOption("2", "Update Ticket Workflow Status", "🔄");
-        ConsoleUI.printMenuOption("3", "Submit Resolution & Root Cause", "✔");
-        ConsoleUI.printMenuOption("4", "Inspect Ticket Deep Telemetry", "🔍");
-        ConsoleUI.printMenuOption("5", "Check My SLA Deadlines & Risk", "⏱️");
-        ConsoleUI.printMenuOption("6", "Secure Sign Out", "🚪");
+        ConsoleUI.printHeader("Network Engineer Workbench", "Engineer: " + currentUser.getUsername());
+        ConsoleUI.printMenuOption("1", "View Assigned Tickets");
+        ConsoleUI.printMenuOption("2", "Update Ticket Status");
+        ConsoleUI.printMenuOption("3", "Add Resolution & Root Cause");
+        ConsoleUI.printMenuOption("4", "View Ticket Details");
+        ConsoleUI.printMenuOption("5", "Check SLA Status");
+        ConsoleUI.printMenuOption("6", "Sign Out");
         
-        ConsoleUI.printPrompt("Enter Action (1-6)");
+        ConsoleUI.printPrompt("Select option (1-6)");
         String choice = scanner.nextLine().trim();
         return engineerController.handleMenuChoice(choice, currentUser, scanner);
     }
@@ -282,15 +274,15 @@ public class Application {
      * Network Manager Dashboard
      */
     private static boolean showManagerDashboard() {
-        ConsoleUI.printHeader("EXECUTIVE TELEMETRY & NOC METRICS", "Manager: " + currentUser.getUsername());
-        ConsoleUI.printMenuOption("1", "Executive Health Dashboard & KPIs", "📊");
-        ConsoleUI.printMenuOption("2", "Engineer Workload & Performance Matrix", "👥");
-        ConsoleUI.printMenuOption("3", "Generate SLA Compliance Audit (CSV/TXT)", "📑");
-        ConsoleUI.printMenuOption("4", "Generate Incident Root-Cause Analysis", "📈");
-        ConsoleUI.printMenuOption("5", "Manage Escalation Command Queue", "🚨");
-        ConsoleUI.printMenuOption("6", "Secure Sign Out", "🚪");
+        ConsoleUI.printHeader("Network Operations Manager Dashboard", "Manager: " + currentUser.getUsername());
+        ConsoleUI.printMenuOption("1", "View Operational Health Metrics");
+        ConsoleUI.printMenuOption("2", "View Engineer Performance Matrix");
+        ConsoleUI.printMenuOption("3", "Generate SLA Compliance Report");
+        ConsoleUI.printMenuOption("4", "Generate Incident Analysis Report");
+        ConsoleUI.printMenuOption("5", "Manage Escalation Queue");
+        ConsoleUI.printMenuOption("6", "Sign Out");
         
-        ConsoleUI.printPrompt("Enter Action (1-6)");
+        ConsoleUI.printPrompt("Select option (1-6)");
         String choice = scanner.nextLine().trim();
         return managerController.handleMenuChoice(choice, currentUser, scanner);
     }

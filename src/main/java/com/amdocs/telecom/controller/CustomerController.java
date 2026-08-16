@@ -12,7 +12,7 @@ import java.util.Scanner;
 
 /**
  * Customer Self-Service Portal Controller
- * Cyberpunk NOC & Telecom Assurance Edition
+ * Professional Enterprise Design
  */
 public class CustomerController {
 
@@ -53,69 +53,63 @@ public class CustomerController {
                     submitFeedback(customerId, scanner);
                     break;
                 case "8":
-                    ConsoleUI.printSuccess("Session terminated. Signed out safely.");
+                    ConsoleUI.printSuccess("Logged out successfully.");
                     return false;
                 default:
-                    ConsoleUI.printError("Invalid option selected. Please try again.");
+                    ConsoleUI.printError("Invalid option. Please try again.");
             }
         } catch (Exception e) {
-            ConsoleUI.printError("Error processing customer request: " + e.getMessage());
+            ConsoleUI.printError("Error processing request: " + e.getMessage());
         }
         return true;
     }
 
     private void viewMyServices(int customerId) throws Exception {
-        ConsoleUI.printHeader("MY SUBSCRIBED TELECOM SERVICES", "Active Network Products & Provisioning");
+        ConsoleUI.printHeader("Subscribed Telecom Services", "Registered products for customer #" + customerId);
         List<TelecomService> services = customerService.getServicesForCustomer(customerId);
         if (services.isEmpty()) {
-            ConsoleUI.printWarning("No active telecom subscriptions registered to your account.");
+            ConsoleUI.printInfo("No subscribed services found.");
             return;
         }
         
-        System.out.printf("  %s%-6s %-18s %-28s %-20s %-12s%s\n",
-                ConsoleUI.BRIGHT_CYAN + ConsoleUI.BOLD, "ID", "SERVICE CODE", "PRODUCT NAME", "NETWORK TYPE", "STATUS", ConsoleUI.RESET);
+        System.out.printf("  %-6s %-18s %-28s %-22s %-10s\n", "ID", "SERVICE CODE", "SERVICE NAME", "TYPE", "STATUS");
         ConsoleUI.printDivider();
         for (TelecomService s : services) {
             String statusStr = s.getServiceStatus() != null ? s.getServiceStatus().name() : "INACTIVE";
-            String statusBadge = "ACTIVE".equalsIgnoreCase(statusStr) ? 
-                    ConsoleUI.BRIGHT_GREEN + "● ACTIVE" + ConsoleUI.RESET : 
-                    ConsoleUI.RED + "○ " + statusStr + ConsoleUI.RESET;
-            System.out.printf("  %-6d %s%-18s%s %-28s %-20s %s\n",
-                    s.getServiceId(), ConsoleUI.BRIGHT_YELLOW, s.getServiceCode(), ConsoleUI.RESET,
-                    s.getServiceName(), s.getServiceType(), statusBadge);
+            System.out.printf("  %-6d %-18s %-28s %-22s %-10s\n",
+                    s.getServiceId(), s.getServiceCode(), s.getServiceName(), s.getServiceType(), statusStr);
         }
     }
 
     private void raiseTroubleTicket(int customerId, Scanner scanner) throws Exception {
-        ConsoleUI.printHeader("INCIDENT DISPATCH WIZARD", "Report an outage or service degradation");
+        ConsoleUI.printHeader("Raise Trouble Ticket", "Submit an incident or service degradation report");
         List<TelecomService> services = customerService.getServicesForCustomer(customerId);
         if (services.isEmpty()) {
-            ConsoleUI.printError("Cannot raise incident: No active services registered for customer.");
+            ConsoleUI.printError("Cannot raise ticket: No active services registered.");
             return;
         }
 
-        ConsoleUI.printSection("STEP 1: SELECT IMPACTED SERVICE");
+        ConsoleUI.printSection("Select Subscribed Service");
         for (int i = 0; i < services.size(); i++) {
             TelecomService s = services.get(i);
-            System.out.printf("  %s[%d]%s %s (%s) [%s]\n",
-                    ConsoleUI.BRIGHT_CYAN + ConsoleUI.BOLD, (i + 1), ConsoleUI.RESET,
-                    s.getServiceName(), s.getServiceCode(), s.getServiceType());
+            System.out.printf("  [%d] %s (%s) - %s\n",
+                    (i + 1), s.getServiceName(), s.getServiceCode(), s.getServiceType());
         }
-        ConsoleUI.printPrompt("Select Service (1-" + services.size() + ")");
+        ConsoleUI.printPrompt("Enter choice (1-" + services.size() + ")");
         int sChoice = Integer.parseInt(scanner.nextLine().trim());
         if (sChoice < 1 || sChoice > services.size()) {
-            ConsoleUI.printError("Invalid service index selected.");
+            ConsoleUI.printError("Invalid service selection.");
             return;
         }
         TelecomService selectedService = services.get(sChoice - 1);
 
-        ConsoleUI.printSection("STEP 2: INCIDENT CLASSIFICATION");
-        System.out.println("  1. NETWORK_OUTAGE (Total loss of signal/service)");
-        System.out.println("  2. SLOW_DATA (Speed degradation)");
-        System.out.println("  3. CALL_DROP (Frequent voice disconnections)");
-        System.out.println("  4. BROADBAND (Fiber / Wi-Fi issues)");
-        System.out.println("  5. OTHER (General technical assistance)");
-        ConsoleUI.printPrompt("Enter Category or Choice (1-5)");
+        ConsoleUI.printSection("Incident Category");
+        System.out.println("  [1] NETWORK_OUTAGE (Complete service disruption)");
+        System.out.println("  [2] SLOW_DATA (Speed degradation)");
+        System.out.println("  [3] CALL_DROP (Voice call disconnection)");
+        System.out.println("  [4] BROADBAND (Fiber / Connectivity issues)");
+        System.out.println("  [5] OTHER (General inquiry)");
+        ConsoleUI.printPrompt("Select category (1-5 or type name)");
         String category = scanner.nextLine().trim().toUpperCase();
         if (category.equals("1")) category = "NETWORK_OUTAGE";
         else if (category.equals("2")) category = "SLOW_DATA";
@@ -123,16 +117,16 @@ public class CustomerController {
         else if (category.equals("4")) category = "BROADBAND";
         else if (category.equals("5")) category = "OTHER";
 
-        ConsoleUI.printSection("STEP 3: INCIDENT DETAILS");
-        ConsoleUI.printPrompt("Detailed Description of the Issue");
+        ConsoleUI.printSection("Issue Description");
+        ConsoleUI.printPrompt("Enter description");
         String description = scanner.nextLine().trim();
 
-        ConsoleUI.printSection("STEP 4: IMPACT PRIORITY");
-        System.out.println("  1. " + ConsoleUI.getPriorityBadge("LOW") + " (Minor inconvenience)");
-        System.out.println("  2. " + ConsoleUI.getPriorityBadge("MEDIUM") + " (Standard degradation)");
-        System.out.println("  3. " + ConsoleUI.getPriorityBadge("HIGH") + " (Business affecting)");
-        System.out.println("  4. " + ConsoleUI.getPriorityBadge("CRITICAL") + " (Complete outage / Emergency)");
-        ConsoleUI.printPrompt("Select Priority (1-4)");
+        ConsoleUI.printSection("Incident Priority");
+        System.out.println("  [1] LOW (Minor non-critical request)");
+        System.out.println("  [2] MEDIUM (Standard service issue)");
+        System.out.println("  [3] HIGH (Significant service disruption)");
+        System.out.println("  [4] CRITICAL (Complete outage / Emergency)");
+        ConsoleUI.printPrompt("Select priority (1-4)");
         String pChoice = scanner.nextLine().trim();
         Priority priority;
         switch (pChoice) {
@@ -144,34 +138,34 @@ public class CustomerController {
 
         TroubleTicket ticket = ticketService.createTicket(customerId, selectedService.getServiceId(), category, description, priority, priority.name());
         
-        ConsoleUI.printSuccess("Trouble Ticket Created & Dispatched to NOC Queue!");
-        ConsoleUI.printCard("TICKET CONFIRMATION", Arrays.asList(
-                "Ticket Number : " + ConsoleUI.BRIGHT_YELLOW + ConsoleUI.BOLD + ticket.getTicketNumber() + ConsoleUI.RESET,
+        ConsoleUI.printSuccess("Trouble Ticket created successfully.");
+        ConsoleUI.printCard("Ticket Confirmation", Arrays.asList(
+                "Ticket Number : " + ticket.getTicketNumber(),
                 "Category      : " + ticket.getCategory(),
                 "Priority      : " + ConsoleUI.getPriorityBadge(ticket.getPriority().name()),
-                "Initial Status: " + ConsoleUI.getStatusBadge(ticket.getStatus().name()),
+                "Status        : " + ConsoleUI.getStatusBadge(ticket.getStatus().name()),
                 "SLA Deadline  : " + (ticket.getSlaDeadline() != null ? ticket.getSlaDeadline().format(DATE_FMT) : "N/A")
-        ), ConsoleUI.BRIGHT_GREEN);
+        ));
     }
 
     private void viewMyTickets(int customerId) throws Exception {
-        ConsoleUI.printHeader("MY ACTIVE TROUBLE TICKETS", "Real-Time Tracking & Resolution Status");
+        ConsoleUI.printHeader("My Trouble Tickets", "Incident status and history");
         List<TroubleTicket> tickets = ticketService.getTicketsByCustomerId(customerId);
         if (tickets.isEmpty()) {
-            ConsoleUI.printInfo("No trouble tickets found for your account.");
+            ConsoleUI.printInfo("No trouble tickets found.");
             return;
         }
-        System.out.printf("  %-16s %-16s %-16s %-20s %-16s\n",
+        System.out.printf("  %-16s %-18s %-12s %-16s %-16s\n",
                 "TICKET NUMBER", "CATEGORY", "PRIORITY", "STATUS", "CREATED DATE");
         ConsoleUI.printDivider();
         for (TroubleTicket t : tickets) {
             String createdStr = t.getCreatedDate() != null ? t.getCreatedDate().format(DATE_FMT) : "N/A";
-            System.out.printf("  %s%-16s%s %-16s %-16s %-20s %s%-16s%s\n",
-                    ConsoleUI.BRIGHT_YELLOW + ConsoleUI.BOLD, t.getTicketNumber(), ConsoleUI.RESET,
+            System.out.printf("  %-16s %-18s %-12s %-16s %-16s\n",
+                    t.getTicketNumber(),
                     t.getCategory(),
                     ConsoleUI.getPriorityBadge(t.getPriority().name()),
                     ConsoleUI.getStatusBadge(t.getStatus().name()),
-                    ConsoleUI.DIM, createdStr, ConsoleUI.RESET);
+                    createdStr);
         }
     }
 
@@ -180,24 +174,24 @@ public class CustomerController {
         String tktNum = scanner.nextLine().trim();
         TroubleTicket ticket = ticketService.getTicketByNumber(tktNum);
         if (ticket == null) {
-            ConsoleUI.printError("Ticket not found with reference: " + tktNum);
+            ConsoleUI.printError("Ticket not found: " + tktNum);
             return;
         }
-        ConsoleUI.printCard("TELEMETRY: TICKET #" + ticket.getTicketNumber(), Arrays.asList(
-                "Reference ID  : " + ticket.getTicketId(),
-                "Category      : " + ticket.getCategory(),
-                "Priority      : " + ConsoleUI.getPriorityBadge(ticket.getPriority().name()),
-                "Current Status: " + ConsoleUI.getStatusBadge(ticket.getStatus().name()),
-                "Description   : " + ticket.getDescription(),
-                "Created At    : " + (ticket.getCreatedDate() != null ? ticket.getCreatedDate().format(DATE_FMT) : "N/A"),
-                "SLA Target    : " + (ticket.getSlaDeadline() != null ? ticket.getSlaDeadline().format(DATE_FMT) : "N/A"),
-                "Root Cause    : " + (ticket.getRootCause() != null ? ticket.getRootCause() : "Under Investigation"),
-                "Resolution    : " + (ticket.getResolutionText() != null ? ConsoleUI.BRIGHT_GREEN + ticket.getResolutionText() + ConsoleUI.RESET : "Pending Technical Resolution")
-        ), ConsoleUI.BRIGHT_CYAN);
+        ConsoleUI.printCard("Ticket Details: " + ticket.getTicketNumber(), Arrays.asList(
+                "Ticket ID    : " + ticket.getTicketId(),
+                "Category     : " + ticket.getCategory(),
+                "Priority     : " + ConsoleUI.getPriorityBadge(ticket.getPriority().name()),
+                "Status       : " + ConsoleUI.getStatusBadge(ticket.getStatus().name()),
+                "Description  : " + ticket.getDescription(),
+                "Created Date : " + (ticket.getCreatedDate() != null ? ticket.getCreatedDate().format(DATE_FMT) : "N/A"),
+                "SLA Deadline : " + (ticket.getSlaDeadline() != null ? ticket.getSlaDeadline().format(DATE_FMT) : "N/A"),
+                "Root Cause   : " + (ticket.getRootCause() != null ? ticket.getRootCause() : "In progress"),
+                "Resolution   : " + (ticket.getResolutionText() != null ? ticket.getResolutionText() : "Pending resolution")
+        ));
     }
 
     private void viewTicketHistory(Scanner scanner) throws Exception {
-        ConsoleUI.printPrompt("Enter Ticket Number to inspect audit history");
+        ConsoleUI.printPrompt("Enter Ticket Number");
         String tktNum = scanner.nextLine().trim();
         TroubleTicket ticket = ticketService.getTicketByNumber(tktNum);
         if (ticket == null) {
@@ -205,46 +199,43 @@ public class CustomerController {
             return;
         }
 
-        ConsoleUI.printHeader("AUDIT LOG FOR TICKET: " + ticket.getTicketNumber(), "Immutable Lifecycle Transition History");
+        ConsoleUI.printHeader("Audit Trail: " + ticket.getTicketNumber(), "Lifecycle State Transitions");
         List<TicketStatusHistory> historyList = ticketService.getTicketHistory(ticket.getTicketId());
         if (historyList == null || historyList.isEmpty()) {
-            ConsoleUI.printInfo("No state transitions recorded yet for this ticket.");
+            ConsoleUI.printInfo("No state transitions recorded for this ticket.");
             return;
         }
 
-        System.out.printf("  %-18s %-16s %-16s %-15s %-30s\n",
-                "TIMESTAMP", "PREVIOUS STATE", "NEW STATE", "OPERATOR", "ACTION / REMARKS");
+        System.out.printf("  %-18s %-16s %-16s %-16s %-30s\n",
+                "TIMESTAMP", "OLD STATUS", "NEW STATUS", "CHANGED BY", "REMARKS");
         ConsoleUI.printDivider();
         for (TicketStatusHistory h : historyList) {
             String timeStr = h.getChangedDate() != null ? h.getChangedDate().format(DATE_FMT) : "N/A";
-            System.out.printf("  %s%-18s%s %-16s %-16s %s%-15s%s %-30s\n",
-                    ConsoleUI.DIM, timeStr, ConsoleUI.RESET,
+            System.out.printf("  %-18s %-16s %-16s %-16s %-30s\n",
+                    timeStr,
                     h.getOldStatus() != null ? h.getOldStatus() : "NONE",
-                    ConsoleUI.BRIGHT_GREEN + h.getNewStatus() + ConsoleUI.RESET,
-                    ConsoleUI.BRIGHT_CYAN, h.getChangedBy(), ConsoleUI.RESET,
+                    h.getNewStatus(),
+                    h.getChangedBy(),
                     h.getRemarks() != null ? h.getRemarks() : "-");
         }
     }
 
     private void viewNotifications(String username) throws Exception {
-        ConsoleUI.printHeader("PUSH NOTIFICATIONS & ALERTS", "Direct NOC Bulletins");
+        ConsoleUI.printHeader("Notifications", "System alerts and bulletins");
         List<Notification> notifs = customerService.getNotificationsForUser(username);
         if (notifs.isEmpty()) {
-            ConsoleUI.printInfo("Your notification inbox is clean. No active alerts.");
+            ConsoleUI.printInfo("No notifications found.");
             return;
         }
         for (Notification n : notifs) {
             String time = n.getCreatedDate() != null ? n.getCreatedDate().format(DATE_FMT) : "N/A";
             String typeStr = n.getNotificationType() != null ? n.getNotificationType().name() : "INFO";
-            String typeBadge = typeStr.contains("SLA") ? 
-                    ConsoleUI.BRIGHT_RED + "⚠ " + typeStr + ConsoleUI.RESET : 
-                    ConsoleUI.BRIGHT_CYAN + "ℹ " + typeStr + ConsoleUI.RESET;
-            System.out.printf("  [%s] %s: %s\n", time, typeBadge, n.getMessage());
+            System.out.printf("  [%s] %s: %s\n", time, typeStr, n.getMessage());
         }
     }
 
     private void submitFeedback(int customerId, Scanner scanner) throws Exception {
-        ConsoleUI.printHeader("CUSTOMER SATISFACTION FEEDBACK", "Rate your recent resolution experience");
+        ConsoleUI.printHeader("Submit Service Feedback", "Rate ticket resolution quality");
         ConsoleUI.printPrompt("Enter Ticket Number or ID (e.g. TT-2026-004521)");
         String input = scanner.nextLine().trim();
         int tktId;
@@ -253,25 +244,21 @@ public class CustomerController {
         } catch (NumberFormatException e) {
             TroubleTicket t = ticketService.getTicketByNumber(input);
             if (t == null) {
-                ConsoleUI.printError("Ticket not found with reference: " + input);
+                ConsoleUI.printError("Ticket not found: " + input);
                 return;
             }
             tktId = t.getTicketId();
         }
         
-        ConsoleUI.printPrompt("Rating (1-5 Stars)");
+        ConsoleUI.printPrompt("Enter Rating (1 to 5)");
         int rating = Integer.parseInt(scanner.nextLine().trim());
         if (rating < 1) rating = 1;
         if (rating > 5) rating = 5;
-        
-        StringBuilder stars = new StringBuilder();
-        for (int i = 0; i < rating; i++) stars.append("⭐");
-        System.out.println("  Selected Rating: " + stars.toString() + " (" + rating + "/5)");
 
-        ConsoleUI.printPrompt("Feedback Remarks & Comments");
+        ConsoleUI.printPrompt("Enter Comments");
         String comments = scanner.nextLine().trim();
 
         customerService.submitFeedback(tktId, customerId, rating, comments);
-        ConsoleUI.printSuccess("Thank you! Your satisfaction feedback has been recorded in the quality audit system.");
+        ConsoleUI.printSuccess("Feedback recorded. Thank you.");
     }
 }
