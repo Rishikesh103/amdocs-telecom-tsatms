@@ -11,7 +11,7 @@ public class SLAMonitorScheduler {
 
     private final ScheduledExecutorService scheduler;
     private final SLAMonitorService slaMonitorService;
-    private boolean running = false;
+    private volatile boolean running = false;
 
     public SLAMonitorScheduler() {
         this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -32,7 +32,7 @@ public class SLAMonitorScheduler {
                     System.err.println("[SLAMonitorScheduler] Error checking SLAs: " + e.getMessage());
                 }
             }, 5, 30, TimeUnit.SECONDS);
-            System.out.println("✓ SLA Monitor Scheduler started (runs every 30 seconds).");
+            System.out.println("[INFO ] [SLAMonitorScheduler] Started — scanning every 30 seconds.");
         }
     }
 
@@ -47,7 +47,7 @@ public class SLAMonitorScheduler {
             } catch (InterruptedException e) {
                 scheduler.shutdownNow();
             }
-            System.out.println("✓ SLA Monitor Scheduler stopped.");
+            System.out.println("[INFO ] [SLAMonitorScheduler] Stopped.");
         }
     }
 }

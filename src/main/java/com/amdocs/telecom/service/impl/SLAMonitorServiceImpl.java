@@ -1,11 +1,15 @@
 package com.amdocs.telecom.service.impl;
 
+import com.amdocs.telecom.dao.NotificationDAO;
+import com.amdocs.telecom.dao.TroubleTicketDAO;
+import com.amdocs.telecom.dao.impl.NotificationDAOImpl;
+import com.amdocs.telecom.dao.impl.TroubleTicketDAOImpl;
 import com.amdocs.telecom.dto.SLAAuditResultDTO;
-import com.amdocs.telecom.service.SLAMonitorService;
-import com.amdocs.telecom.dao.*;
-import com.amdocs.telecom.dao.impl.*;
-import com.amdocs.telecom.model.*;
 import com.amdocs.telecom.exception.DAOException;
+import com.amdocs.telecom.model.Notification;
+import com.amdocs.telecom.model.NotificationType;
+import com.amdocs.telecom.model.TroubleTicket;
+import com.amdocs.telecom.service.SLAMonitorService;
 import com.amdocs.telecom.util.DateUtil;
 
 import java.time.Duration;
@@ -47,7 +51,7 @@ public class SLAMonitorServiceImpl implements SLAMonitorService {
             SLAAuditResultDTO dto = new SLAAuditResultDTO();
             dto.setTicketId(t.getTicketId());
             dto.setTicketNumber(t.getTicketNumber());
-            dto.setCategory(t.getCategory());
+            dto.setCategory(t.getCategory() != null ? t.getCategory() : "UNKNOWN");
             dto.setPriority(t.getPriority());
             dto.setStatus(t.getStatus());
             dto.setSlaDeadline(t.getSlaDeadline());

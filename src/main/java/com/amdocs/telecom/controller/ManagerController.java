@@ -2,9 +2,17 @@ package com.amdocs.telecom.controller;
 
 import com.amdocs.telecom.dto.DashboardMetricsDTO;
 import com.amdocs.telecom.dto.EngineerWorkloadDTO;
-import com.amdocs.telecom.model.*;
-import com.amdocs.telecom.service.*;
-import com.amdocs.telecom.service.impl.*;
+import com.amdocs.telecom.model.NetworkEngineer;
+import com.amdocs.telecom.model.TroubleTicket;
+import com.amdocs.telecom.model.UserAccount;
+import com.amdocs.telecom.service.EngineerService;
+import com.amdocs.telecom.service.ManagerService;
+import com.amdocs.telecom.service.ReportService;
+import com.amdocs.telecom.service.TroubleTicketService;
+import com.amdocs.telecom.service.impl.EngineerServiceImpl;
+import com.amdocs.telecom.service.impl.ManagerServiceImpl;
+import com.amdocs.telecom.service.impl.ReportServiceImpl;
+import com.amdocs.telecom.service.impl.TroubleTicketServiceImpl;
 import com.amdocs.telecom.util.ConsoleUI;
 
 import java.util.List;
@@ -192,9 +200,9 @@ public class ManagerController {
         ConsoleUI.printSection("Available Network Engineer Fleet");
         System.out.printf("  %-4s %-10s %-20s %-22s %-12s %-12s\n", "ID", "EMP CODE", "NAME", "SPECIALIZATION", "ACTIVE TKT", "STATUS");
         ConsoleUI.printDivider();
-        for (NetworkEngineer e : engineers) {
+        for (NetworkEngineer engineer : engineers) {
             System.out.printf("  %-4d %-10s %-20s %-22s %-12d %-12s\n",
-                    e.getEngineerId(), e.getEmployeeCode(), e.getEngineerName(), e.getSpecialization(), e.getActiveTicketCount(), e.getAvailability());
+                    engineer.getEngineerId(), engineer.getEmployeeCode(), engineer.getFullName(), engineer.getSpecialization(), engineer.getActiveTicketCount(), engineer.getAvailability());
         }
 
         ConsoleUI.printPrompt("Enter Target Engineer ID or Employee Code (e.g., 1 or ENG1008) (or 0 to Cancel)");

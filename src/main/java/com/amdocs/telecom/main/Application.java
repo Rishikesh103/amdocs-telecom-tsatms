@@ -1,13 +1,15 @@
 package com.amdocs.telecom.main;
 
-import com.amdocs.telecom.controller.*;
+import com.amdocs.telecom.controller.CustomerController;
+import com.amdocs.telecom.controller.EngineerController;
+import com.amdocs.telecom.controller.ManagerController;
+import com.amdocs.telecom.controller.ServiceDeskController;
 import com.amdocs.telecom.exception.AuthenticationException;
 import com.amdocs.telecom.model.UserAccount;
 import com.amdocs.telecom.scheduler.NetworkEventProcessor;
 import com.amdocs.telecom.scheduler.SLAMonitorScheduler;
 import com.amdocs.telecom.service.AuthenticationService;
 import com.amdocs.telecom.util.ConsoleUI;
-import com.amdocs.telecom.util.DBConnection;
 
 import java.util.Arrays;
 import java.util.Scanner;
@@ -64,7 +66,7 @@ public class Application {
             
         } catch (Exception e) {
             ConsoleUI.printError("Fatal System Error: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("[FATAL] Cause: " + e.getClass().getSimpleName() + " — " + e.getMessage());
         } finally {
             if (slaScheduler != null) {
                 slaScheduler.stop();
@@ -75,8 +77,7 @@ public class Application {
             if (scanner != null) {
                 scanner.close();
             }
-            // Close database connection
-            DBConnection.getInstance().closeConnection();
+            // Connections closed per-call via try-with-resources in each DAO
         }
     }
     

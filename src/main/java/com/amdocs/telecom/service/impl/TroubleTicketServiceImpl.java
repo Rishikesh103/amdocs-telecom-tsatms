@@ -1,12 +1,42 @@
 package com.amdocs.telecom.service.impl;
 
-import com.amdocs.telecom.service.TroubleTicketService;
-import com.amdocs.telecom.dao.*;
-import com.amdocs.telecom.dao.impl.*;
-import com.amdocs.telecom.model.*;
+import com.amdocs.telecom.dao.AuditLogDAO;
+import com.amdocs.telecom.dao.CustomerDAO;
+import com.amdocs.telecom.dao.EscalationHistoryDAO;
+import com.amdocs.telecom.dao.NetworkEngineerDAO;
+import com.amdocs.telecom.dao.NotificationDAO;
+import com.amdocs.telecom.dao.SLAConfigurationDAO;
+import com.amdocs.telecom.dao.TelecomServiceDAO;
+import com.amdocs.telecom.dao.TicketStatusHistoryDAO;
+import com.amdocs.telecom.dao.TroubleTicketDAO;
+import com.amdocs.telecom.dao.impl.AuditLogDAOImpl;
+import com.amdocs.telecom.dao.impl.CustomerDAOImpl;
+import com.amdocs.telecom.dao.impl.EscalationHistoryDAOImpl;
+import com.amdocs.telecom.dao.impl.NetworkEngineerDAOImpl;
+import com.amdocs.telecom.dao.impl.NotificationDAOImpl;
+import com.amdocs.telecom.dao.impl.SLAConfigurationDAOImpl;
+import com.amdocs.telecom.dao.impl.TelecomServiceDAOImpl;
+import com.amdocs.telecom.dao.impl.TicketStatusHistoryDAOImpl;
+import com.amdocs.telecom.dao.impl.TroubleTicketDAOImpl;
 import com.amdocs.telecom.dto.TicketSummaryDTO;
 import com.amdocs.telecom.exception.BusinessException;
 import com.amdocs.telecom.exception.DAOException;
+import com.amdocs.telecom.model.AvailabilityStatus;
+import com.amdocs.telecom.model.Customer;
+import com.amdocs.telecom.model.EscalationHistory;
+import com.amdocs.telecom.model.EscalationLevel;
+import com.amdocs.telecom.model.NetworkEngineer;
+import com.amdocs.telecom.model.Notification;
+import com.amdocs.telecom.model.NotificationType;
+import com.amdocs.telecom.model.Priority;
+import com.amdocs.telecom.model.ResolutionCode;
+import com.amdocs.telecom.model.SLAConfiguration;
+import com.amdocs.telecom.model.SLAStatus;
+import com.amdocs.telecom.model.TelecomService;
+import com.amdocs.telecom.model.TicketStatus;
+import com.amdocs.telecom.model.TicketStatusHistory;
+import com.amdocs.telecom.model.TroubleTicket;
+import com.amdocs.telecom.service.TroubleTicketService;
 import com.amdocs.telecom.util.DateUtil;
 
 import java.time.LocalDateTime;
@@ -14,9 +44,17 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
+
 
 public class TroubleTicketServiceImpl implements TroubleTicketService {
+
+    // ========== Constants ==========
+    private static final String TICKET_PREFIX       = "TKT";
+    private static final int    TICKET_NUMBER_MIN   = 100000;
+    private static final int    TICKET_NUMBER_RANGE = 900000;
+    private static final String CUSTOMER_ID_PREFIX  = "cust";
+    private static final int    CUSTOMER_ID_OFFSET  = 100244;
+    private static final java.util.Random TICKET_RANDOM = new java.util.Random();
 
     private final TroubleTicketDAO ticketDAO;
     private final CustomerDAO customerDAO;
@@ -55,7 +93,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         }
 
         TroubleTicket ticket = new TroubleTicket();
-        String ticketNum = "TKT" + (100000 + new Random().nextInt(900000));
+        String ticketNum = TICKET_PREFIX + (TICKET_NUMBER_MIN + TICKET_RANDOM.nextInt(TICKET_NUMBER_RANGE));
         ticket.setTicketNumber(ticketNum);
         ticket.setCustomerId(customerId);
         ticket.setServiceId(serviceId);
@@ -97,7 +135,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         notificationDAO.create(notifAdmin);
 
         Notification notifCust = new Notification();
-        notifCust.setRecipientId("cust" + (100244 + customerId));
+        notifCust.setRecipientId(CUSTOMER_ID_PREFIX + (CUSTOMER_ID_OFFSET + customerId));
         notifCust.setTicketId(ticket.getTicketId());
         notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " (" + category + ") has been submitted successfully with priority " + priority + ".");
         notifCust.setNotificationType(NotificationType.TICKET_CREATION);
@@ -135,14 +173,14 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
             }
 
             Customer c = customerDAO.findById(t.getCustomerId());
-            if (c != null) dto.setCustomerName(c.getCustomerName());
+            if (c != null) dto.setCustomerName(c.getFullName());
 
             TelecomService s = serviceDAO.findById(t.getServiceId());
             if (s != null) dto.setServiceName(s.getServiceName());
 
             if (t.getAssignedEngineerId() != null) {
                 NetworkEngineer e = engineerDAO.findById(t.getAssignedEngineerId());
-                if (e != null) dto.setAssignedEngineerName(e.getEngineerName());
+                if (e != null) dto.setAssignedEngineerName(e.getFullName());
             } else {
                 dto.setAssignedEngineerName("Unassigned");
             }
@@ -212,7 +250,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         history.setOldStatus(TicketStatus.OPEN.name());
         history.setNewStatus(TicketStatus.ASSIGNED.name());
         history.setChangedBy("AUTO_ASSIGNMENT_ENGINE");
-        history.setRemarks("Assigned to engineer: " + selected.getEngineerName());
+        history.setRemarks("Assigned to engineer: " + selected.getFullName());
         historyDAO.create(history);
 
         // Notification to engineer
@@ -225,9 +263,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
 
         // Notification to customer
         Notification notifCust = new Notification();
-        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setRecipientId(CUSTOMER_ID_PREFIX + (CUSTOMER_ID_OFFSET + ticket.getCustomerId()));
         notifCust.setTicketId(ticketId);
-        notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " has been assigned to Engineer " + selected.getEngineerName() + ".");
+        notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " has been assigned to Engineer " + selected.getFullName() + ".");
         notifCust.setNotificationType(NotificationType.ENGINEER_ASSIGNMENT);
         notificationDAO.create(notifCust);
 
@@ -255,7 +293,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         history.setOldStatus(oldStatus);
         history.setNewStatus(TicketStatus.ASSIGNED.name());
         history.setChangedBy(assignedBy);
-        history.setRemarks("Manually assigned to: " + engineer.getEngineerName());
+        history.setRemarks("Manually assigned to: " + engineer.getFullName());
         historyDAO.create(history);
 
         Notification notif = new Notification();
@@ -266,9 +304,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         notificationDAO.create(notif);
 
         Notification notifCust = new Notification();
-        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setRecipientId(CUSTOMER_ID_PREFIX + (CUSTOMER_ID_OFFSET + ticket.getCustomerId()));
         notifCust.setTicketId(ticketId);
-        notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " has been assigned to Engineer " + engineer.getEngineerName() + ".");
+        notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " has been assigned to Engineer " + engineer.getFullName() + ".");
         notifCust.setNotificationType(NotificationType.ENGINEER_ASSIGNMENT);
         notificationDAO.create(notifCust);
 
@@ -294,7 +332,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         historyDAO.create(history);
 
         Notification notifCust = new Notification();
-        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setRecipientId(CUSTOMER_ID_PREFIX + (CUSTOMER_ID_OFFSET + ticket.getCustomerId()));
         notifCust.setTicketId(ticketId);
         notifCust.setMessage("Status of ticket " + ticket.getTicketNumber() + " updated to " + newStatus.name() + ".");
         notifCust.setNotificationType(NotificationType.TICKET_ASSIGNMENT);
@@ -325,7 +363,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         historyDAO.create(history);
 
         Notification notifCust = new Notification();
-        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setRecipientId(CUSTOMER_ID_PREFIX + (CUSTOMER_ID_OFFSET + ticket.getCustomerId()));
         notifCust.setTicketId(ticketId);
         notifCust.setMessage("Priority of ticket " + ticket.getTicketNumber() + " updated to " + newPriority.name() + ". New SLA: " + ticket.getSlaDeadline());
         notifCust.setNotificationType(NotificationType.TICKET_ASSIGNMENT);
@@ -364,7 +402,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         historyDAO.create(history);
 
         Notification notifCust = new Notification();
-        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setRecipientId(CUSTOMER_ID_PREFIX + (CUSTOMER_ID_OFFSET + ticket.getCustomerId()));
         notifCust.setTicketId(ticketId);
         notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " has been RESOLVED. Resolution: " + resolutionText + ". Please rate your service experience.");
         notifCust.setNotificationType(NotificationType.TICKET_RESOLUTION);
@@ -427,7 +465,7 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         historyDAO.create(history);
 
         Notification notifCust = new Notification();
-        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setRecipientId(CUSTOMER_ID_PREFIX + (CUSTOMER_ID_OFFSET + ticket.getCustomerId()));
         notifCust.setTicketId(ticketId);
         notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " has been closed. Thank you for choosing Amdocs Telecom.");
         notifCust.setNotificationType(NotificationType.TICKET_CLOSURE);

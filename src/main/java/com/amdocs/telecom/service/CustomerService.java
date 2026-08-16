@@ -1,8 +1,10 @@
 package com.amdocs.telecom.service;
 
-import com.amdocs.telecom.model.*;
 import com.amdocs.telecom.exception.BusinessException;
 import com.amdocs.telecom.exception.DAOException;
+import com.amdocs.telecom.model.Customer;
+import com.amdocs.telecom.model.Notification;
+import com.amdocs.telecom.model.TelecomService;
 
 import java.util.List;
 

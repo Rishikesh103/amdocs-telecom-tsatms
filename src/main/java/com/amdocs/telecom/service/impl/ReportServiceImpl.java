@@ -1,10 +1,15 @@
 package com.amdocs.telecom.service.impl;
 
-import com.amdocs.telecom.service.ReportService;
-import com.amdocs.telecom.dao.*;
-import com.amdocs.telecom.dao.impl.*;
-import com.amdocs.telecom.model.*;
+import com.amdocs.telecom.dao.NetworkEngineerDAO;
+import com.amdocs.telecom.dao.TroubleTicketDAO;
+import com.amdocs.telecom.dao.impl.NetworkEngineerDAOImpl;
+import com.amdocs.telecom.dao.impl.TroubleTicketDAOImpl;
 import com.amdocs.telecom.exception.DAOException;
+import com.amdocs.telecom.model.NetworkEngineer;
+import com.amdocs.telecom.model.Priority;
+import com.amdocs.telecom.model.TicketStatus;
+import com.amdocs.telecom.model.TroubleTicket;
+import com.amdocs.telecom.service.ReportService;
 import com.amdocs.telecom.util.ConsoleUI;
 import com.amdocs.telecom.util.DateUtil;
 
@@ -29,8 +34,8 @@ public class ReportServiceImpl implements ReportService {
 
     private void ensureReportsDirectory() {
         File dir = new File("reports");
-        if (!dir.exists()) {
-            dir.mkdirs();
+        if (!dir.exists() && !dir.mkdirs()) {
+            ConsoleUI.printError("Could not create reports directory. File export may fail.");
         }
     }
 
@@ -80,19 +85,19 @@ public class ReportServiceImpl implements ReportService {
 
         if (isCsv) {
             sb.append("EMPLOYEE_CODE,ENGINEER_NAME,SPECIALIZATION,ACTIVE_TICKETS,RESOLVED_TICKETS\n");
-            for (NetworkEngineer e : engineers) {
+            for (NetworkEngineer engineer : engineers) {
                 long active = tickets.stream()
-                        .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(e.getEngineerId()) &&
+                        .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(engineer.getEngineerId()) &&
                                 t.getStatus() != TicketStatus.RESOLVED && t.getStatus() != TicketStatus.CLOSED)
                         .count();
 
                 long resolved = tickets.stream()
-                        .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(e.getEngineerId()) &&
+                        .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(engineer.getEngineerId()) &&
                                 (t.getStatus() == TicketStatus.RESOLVED || t.getStatus() == TicketStatus.CLOSED))
                         .count();
 
                 sb.append(String.format("%s,\"%s\",%s,%d,%d\n",
-                        e.getEmployeeCode(), e.getEngineerName(), e.getSpecialization(), active, resolved));
+                        engineer.getEmployeeCode(), engineer.getFullName(), engineer.getSpecialization(), active, resolved));
             }
             exportReportToFile("engineer_performance_report", "csv", sb.toString());
             return sb.toString();
@@ -103,19 +108,19 @@ public class ReportServiceImpl implements ReportService {
             sb.append(String.format("%-10s %-20s %-20s %-12s %-12s\n", "EMP CODE", "NAME", "SPECIALIZATION", "ACTIVE TKT", "RESOLVED TKT"));
             sb.append("---------------------------------------------------------------------------------\n");
 
-            for (NetworkEngineer e : engineers) {
+            for (NetworkEngineer engineer : engineers) {
                 long active = tickets.stream()
-                        .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(e.getEngineerId()) &&
+                        .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(engineer.getEngineerId()) &&
                                 t.getStatus() != TicketStatus.RESOLVED && t.getStatus() != TicketStatus.CLOSED)
                         .count();
 
                 long resolved = tickets.stream()
-                        .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(e.getEngineerId()) &&
+                        .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(engineer.getEngineerId()) &&
                                 (t.getStatus() == TicketStatus.RESOLVED || t.getStatus() == TicketStatus.CLOSED))
                         .count();
 
                 sb.append(String.format("%-10s %-20s %-20s %-12d %-12d\n",
-                        e.getEmployeeCode(), e.getEngineerName(), e.getSpecialization(), active, resolved));
+                        engineer.getEmployeeCode(), engineer.getFullName(), engineer.getSpecialization(), active, resolved));
             }
 
             if ("TXT".equalsIgnoreCase(format)) {

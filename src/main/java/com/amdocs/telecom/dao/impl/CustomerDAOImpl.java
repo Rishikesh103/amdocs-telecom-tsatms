@@ -32,7 +32,7 @@ public class CustomerDAOImpl implements CustomerDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             
             pstmt.setString(1, customer.getCustomerNumber());
-            pstmt.setString(2, customer.getCustomerName());
+            pstmt.setString(2, customer.getFullName());
             pstmt.setString(3, customer.getEmail());
             pstmt.setString(4, customer.getMobileNumber());
             pstmt.setString(5, customer.getCustomerType().name());
@@ -106,7 +106,7 @@ public class CustomerDAOImpl implements CustomerDAO {
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            pstmt.setString(1, customer.getCustomerName());
+            pstmt.setString(1, customer.getFullName());
             pstmt.setString(2, customer.getEmail());
             pstmt.setString(3, customer.getMobileNumber());
             pstmt.setString(4, customer.getCustomerType().name());
@@ -249,7 +249,7 @@ public class CustomerDAOImpl implements CustomerDAO {
         Customer customer = new Customer();
         customer.setCustomerId(rs.getInt("customer_id"));
         customer.setCustomerNumber(rs.getString("customer_number"));
-        customer.setCustomerName(rs.getString("customer_name"));
+        customer.setFullName(rs.getString("customer_name"));
         customer.setEmail(rs.getString("email"));
         customer.setMobileNumber(rs.getString("mobile_number"));
         customer.setCustomerType(CustomerType.fromString(rs.getString("customer_type")));

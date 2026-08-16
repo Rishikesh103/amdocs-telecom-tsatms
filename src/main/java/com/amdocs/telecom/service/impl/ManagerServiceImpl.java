@@ -1,9 +1,18 @@
 package com.amdocs.telecom.service.impl;
 
+import com.amdocs.telecom.dao.NetworkEngineerDAO;
+import com.amdocs.telecom.dao.TroubleTicketDAO;
+import com.amdocs.telecom.dao.impl.NetworkEngineerDAOImpl;
+import com.amdocs.telecom.dao.impl.TroubleTicketDAOImpl;
+import com.amdocs.telecom.dto.DashboardMetricsDTO;
+import com.amdocs.telecom.dto.EngineerWorkloadDTO;
+import com.amdocs.telecom.exception.DAOException;
+import com.amdocs.telecom.model.AvailabilityStatus;
+import com.amdocs.telecom.model.NetworkEngineer;
+import com.amdocs.telecom.model.Priority;
+import com.amdocs.telecom.model.TicketStatus;
+import com.amdocs.telecom.model.TroubleTicket;
 import com.amdocs.telecom.service.ManagerService;
-import com.amdocs.telecom.dao.*;
-import com.amdocs.telecom.dao.impl.*;
-import com.amdocs.telecom.model.*;
 import com.amdocs.telecom.dto.DashboardMetricsDTO;
 import com.amdocs.telecom.dto.EngineerWorkloadDTO;
 import com.amdocs.telecom.exception.DAOException;
@@ -63,22 +72,22 @@ public class ManagerServiceImpl implements ManagerService {
         List<NetworkEngineer> engineers = engineerDAO.findAll();
         List<TroubleTicket> openTickets = ticketDAO.findAllOpen();
 
-        return engineers.stream().map(e -> {
+        return engineers.stream().map(engineer -> {
             EngineerWorkloadDTO dto = new EngineerWorkloadDTO();
-            dto.setEngineerId(e.getEngineerId());
-            dto.setEmployeeCode(e.getEmployeeCode());
-            dto.setEngineerName(e.getEngineerName());
-            dto.setSpecialization(e.getSpecialization());
-            dto.setRegion(e.getRegion());
-            dto.setAvailability(e.getAvailability());
+            dto.setEngineerId(engineer.getEngineerId());
+            dto.setEmployeeCode(engineer.getEmployeeCode());
+            dto.setEngineerName(engineer.getFullName());
+            dto.setSpecialization(engineer.getSpecialization());
+            dto.setRegion(engineer.getRegion());
+            dto.setAvailability(engineer.getAvailability());
 
             long activeCount = openTickets.stream()
-                    .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(e.getEngineerId()))
+                    .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(engineer.getEngineerId()))
                     .count();
             dto.setActiveTicketCount((int) activeCount);
 
             long criticalCount = openTickets.stream()
-                    .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(e.getEngineerId()) && t.getPriority() == Priority.CRITICAL)
+                    .filter(t -> t.getAssignedEngineerId() != null && t.getAssignedEngineerId().equals(engineer.getEngineerId()) && t.getPriority() == Priority.CRITICAL)
                     .count();
             dto.setCriticalTicketCount((int) criticalCount);
 

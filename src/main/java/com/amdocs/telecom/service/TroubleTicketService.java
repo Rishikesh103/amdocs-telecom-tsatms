@@ -1,9 +1,15 @@
 package com.amdocs.telecom.service;
 
-import com.amdocs.telecom.model.*;
 import com.amdocs.telecom.dto.TicketSummaryDTO;
 import com.amdocs.telecom.exception.BusinessException;
 import com.amdocs.telecom.exception.DAOException;
+import com.amdocs.telecom.model.EscalationLevel;
+import com.amdocs.telecom.model.NetworkEngineer;
+import com.amdocs.telecom.model.Priority;
+import com.amdocs.telecom.model.ResolutionCode;
+import com.amdocs.telecom.model.TicketStatus;
+import com.amdocs.telecom.model.TicketStatusHistory;
+import com.amdocs.telecom.model.TroubleTicket;
 
 import java.util.List;
 
@@ -24,5 +30,5 @@ public interface TroubleTicketService {
     boolean addResolution(int ticketId, String resolutionText, String rootCause, ResolutionCode resolutionCode, int engineerId) throws BusinessException, DAOException;
     boolean escalateTicket(int ticketId, EscalationLevel toLevel, String reason, String escalatedBy) throws BusinessException, DAOException;
     boolean closeTicket(int ticketId, String remarks, String closedBy) throws BusinessException, DAOException;
-    List<com.amdocs.telecom.model.TicketStatusHistory> getTicketHistory(int ticketId) throws com.amdocs.telecom.exception.DAOException;
+    List<TicketStatusHistory> getTicketHistory(int ticketId) throws DAOException;
 }

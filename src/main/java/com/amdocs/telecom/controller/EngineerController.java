@@ -1,8 +1,16 @@
 package com.amdocs.telecom.controller;
 
-import com.amdocs.telecom.model.*;
-import com.amdocs.telecom.service.*;
-import com.amdocs.telecom.service.impl.*;
+import com.amdocs.telecom.model.NetworkEngineer;
+import com.amdocs.telecom.model.Priority;
+import com.amdocs.telecom.model.ResolutionCode;
+import com.amdocs.telecom.model.SLAStatus;
+import com.amdocs.telecom.model.TicketStatus;
+import com.amdocs.telecom.model.TroubleTicket;
+import com.amdocs.telecom.model.UserAccount;
+import com.amdocs.telecom.service.EngineerService;
+import com.amdocs.telecom.service.TroubleTicketService;
+import com.amdocs.telecom.service.impl.EngineerServiceImpl;
+import com.amdocs.telecom.service.impl.TroubleTicketServiceImpl;
 import com.amdocs.telecom.util.ConsoleUI;
 
 import java.time.LocalDateTime;

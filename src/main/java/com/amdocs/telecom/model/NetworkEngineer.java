@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class NetworkEngineer {
     private int engineerId;
     private String employeeCode;
-    private String engineerName;
+    private String fullName;
     private String specialization;
     private String region;
     private int experienceYears;
@@ -22,10 +22,10 @@ public class NetworkEngineer {
     public NetworkEngineer() {
     }
 
-    public NetworkEngineer(String employeeCode, String engineerName, String specialization,
+    public NetworkEngineer(String employeeCode, String fullName, String specialization,
                            String region, int experienceYears) {
         this.employeeCode = employeeCode;
-        this.engineerName = engineerName;
+        this.fullName = fullName;
         this.specialization = specialization;
         this.region = region;
         this.experienceYears = experienceYears;
@@ -52,12 +52,12 @@ public class NetworkEngineer {
         this.employeeCode = employeeCode;
     }
 
-    public String getEngineerName() {
-        return engineerName;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setEngineerName(String engineerName) {
-        this.engineerName = engineerName;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getSpecialization() {
@@ -121,7 +121,7 @@ public class NetworkEngineer {
         return "NetworkEngineer{" +
                 "engineerId=" + engineerId +
                 ", employeeCode='" + employeeCode + '\'' +
-                ", engineerName='" + engineerName + '\'' +
+                ", fullName='" + fullName + '\'' +
                 ", specialization='" + specialization + '\'' +
                 ", region='" + region + '\'' +
                 ", experienceYears=" + experienceYears +

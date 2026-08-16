@@ -2,7 +2,10 @@ package com.amdocs.telecom.scheduler;
 
 import com.amdocs.telecom.dao.NetworkEventDAO;
 import com.amdocs.telecom.dao.impl.NetworkEventDAOImpl;
-import com.amdocs.telecom.model.*;
+import com.amdocs.telecom.model.NetworkEvent;
+import com.amdocs.telecom.model.Priority;
+import com.amdocs.telecom.model.Severity;
+import com.amdocs.telecom.model.TroubleTicket;
 import com.amdocs.telecom.service.TroubleTicketService;
 import com.amdocs.telecom.service.impl.TroubleTicketServiceImpl;
 
@@ -29,7 +32,7 @@ public class NetworkEventProcessor implements Runnable {
         workerThread = new Thread(this, "NetworkEventProcessorThread");
         workerThread.setDaemon(true);
         workerThread.start();
-        System.out.println("✓ Network Event Processor Thread started.");
+        System.out.println("[INFO ] [NetworkEventProcessor] Thread started — consuming event queue.");
     }
 
     public void stop() {
@@ -61,7 +64,8 @@ public class NetworkEventProcessor implements Runnable {
                 Thread.currentThread().interrupt();
                 break;
             } catch (Exception e) {
-                // Keep background thread alive
+                System.err.println("[ERROR] [NetworkEventProcessor] Unexpected error in event loop: " + e.getMessage());
+                // Keep background thread alive — do not re-throw
             }
         }
     }
@@ -79,7 +83,7 @@ public class NetworkEventProcessor implements Runnable {
                         Severity.CRITICAL.name()
                 );
                 eventDAO.markAsProcessed(event.getEventId(), created.getTicketId());
-                System.out.println("\n[NetworkEventProcessor] Auto-generated CRITICAL Ticket " + created.getTicketNumber() + " for node " + event.getNetworkNode());
+                System.out.println("[INFO ] [NetworkEventProcessor] Auto-generated CRITICAL ticket " + created.getTicketNumber() + " for node " + event.getNetworkNode());
             } else {
                 eventDAO.markAsProcessed(event.getEventId(), null);
             }

@@ -1,10 +1,17 @@
 package com.amdocs.telecom.service.impl;
 
-import com.amdocs.telecom.service.EngineerService;
-import com.amdocs.telecom.dao.*;
-import com.amdocs.telecom.dao.impl.*;
-import com.amdocs.telecom.model.*;
+import com.amdocs.telecom.dao.NetworkEngineerDAO;
+import com.amdocs.telecom.dao.TroubleTicketDAO;
+import com.amdocs.telecom.dao.UserAccountDAO;
+import com.amdocs.telecom.dao.impl.NetworkEngineerDAOImpl;
+import com.amdocs.telecom.dao.impl.TroubleTicketDAOImpl;
+import com.amdocs.telecom.dao.impl.UserAccountDAOImpl;
 import com.amdocs.telecom.exception.DAOException;
+import com.amdocs.telecom.model.AvailabilityStatus;
+import com.amdocs.telecom.model.NetworkEngineer;
+import com.amdocs.telecom.model.TroubleTicket;
+import com.amdocs.telecom.model.UserAccount;
+import com.amdocs.telecom.service.EngineerService;
 
 import java.util.List;
 

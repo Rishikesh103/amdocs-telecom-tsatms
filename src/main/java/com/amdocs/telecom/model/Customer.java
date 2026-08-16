@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class Customer {
     private int customerId;
     private String customerNumber;
-    private String customerName;
+    private String fullName;
     private String email;
     private String mobileNumber;
     private CustomerType customerType;
@@ -22,10 +22,10 @@ public class Customer {
     public Customer() {
     }
 
-    public Customer(String customerNumber, String customerName, String email,
+    public Customer(String customerNumber, String fullName, String email,
                     String mobileNumber, CustomerType customerType, String city) {
         this.customerNumber = customerNumber;
-        this.customerName = customerName;
+        this.fullName = fullName;
         this.email = email;
         this.mobileNumber = mobileNumber;
         this.customerType = customerType;
@@ -52,12 +52,12 @@ public class Customer {
         this.customerNumber = customerNumber;
     }
 
-    public String getCustomerName() {
-        return customerName;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getEmail() {
@@ -121,7 +121,7 @@ public class Customer {
         return "Customer{" +
                 "customerId=" + customerId +
                 ", customerNumber='" + customerNumber + '\'' +
-                ", customerName='" + customerName + '\'' +
+                ", fullName='" + fullName + '\'' +
                 ", email='" + email + '\'' +
                 ", mobileNumber='" + mobileNumber + '\'' +
                 ", customerType=" + customerType +

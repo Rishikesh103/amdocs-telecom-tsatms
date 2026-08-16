@@ -27,7 +27,7 @@ public class NetworkEngineerDAOImpl implements NetworkEngineerDAO {
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             
             pstmt.setString(1, engineer.getEmployeeCode());
-            pstmt.setString(2, engineer.getEngineerName());
+            pstmt.setString(2, engineer.getFullName());
             pstmt.setString(3, engineer.getSpecialization());
             pstmt.setString(4, engineer.getRegion());
             pstmt.setInt(5, engineer.getExperienceYears());
@@ -101,7 +101,7 @@ public class NetworkEngineerDAOImpl implements NetworkEngineerDAO {
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
-            pstmt.setString(1, engineer.getEngineerName());
+            pstmt.setString(1, engineer.getFullName());
             pstmt.setString(2, engineer.getSpecialization());
             pstmt.setString(3, engineer.getRegion());
             pstmt.setInt(4, engineer.getExperienceYears());
@@ -246,7 +246,7 @@ public class NetworkEngineerDAOImpl implements NetworkEngineerDAO {
         NetworkEngineer engineer = new NetworkEngineer();
         engineer.setEngineerId(rs.getInt("engineer_id"));
         engineer.setEmployeeCode(rs.getString("employee_code"));
-        engineer.setEngineerName(rs.getString("engineer_name"));
+        engineer.setFullName(rs.getString("engineer_name"));
         engineer.setSpecialization(rs.getString("specialization"));
         engineer.setRegion(rs.getString("region"));
         engineer.setExperienceYears(rs.getInt("experience_years"));

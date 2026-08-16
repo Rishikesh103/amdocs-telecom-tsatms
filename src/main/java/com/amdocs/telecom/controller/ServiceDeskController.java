@@ -1,9 +1,20 @@
 package com.amdocs.telecom.controller;
 
+import com.amdocs.telecom.dto.SLAAuditResultDTO;
 import com.amdocs.telecom.dto.TicketSummaryDTO;
-import com.amdocs.telecom.model.*;
-import com.amdocs.telecom.service.*;
-import com.amdocs.telecom.service.impl.*;
+import com.amdocs.telecom.model.EscalationLevel;
+import com.amdocs.telecom.model.NetworkEngineer;
+import com.amdocs.telecom.model.Priority;
+import com.amdocs.telecom.model.TroubleTicket;
+import com.amdocs.telecom.model.UserAccount;
+import com.amdocs.telecom.service.EngineerService;
+import com.amdocs.telecom.service.ReportService;
+import com.amdocs.telecom.service.SLAMonitorService;
+import com.amdocs.telecom.service.TroubleTicketService;
+import com.amdocs.telecom.service.impl.EngineerServiceImpl;
+import com.amdocs.telecom.service.impl.ReportServiceImpl;
+import com.amdocs.telecom.service.impl.SLAMonitorServiceImpl;
+import com.amdocs.telecom.service.impl.TroubleTicketServiceImpl;
 import com.amdocs.telecom.util.ConsoleUI;
 
 import java.time.format.DateTimeFormatter;
@@ -174,7 +185,7 @@ public class ServiceDeskController {
             ConsoleUI.printSuccess("Auto-assignment completed successfully.");
             ConsoleUI.printCard("Assignment Confirmation", Arrays.asList(
                     "Ticket Number   : " + selectedTicket.getTicketNumber(),
-                    "Assigned To     : " + assigned.getEngineerName(),
+                    "Assigned To     : " + assigned.getFullName(),
                     "Specialization  : " + assigned.getSpecialization(),
                     "Region          : " + assigned.getRegion(),
                     "Seniority       : " + assigned.getExperienceYears() + " Years",
@@ -185,9 +196,9 @@ public class ServiceDeskController {
             ConsoleUI.printSection("Available Engineer Fleet");
             System.out.printf("  %-4s %-20s %-22s %-12s %-12s\n", "ID", "NAME", "SPECIALIZATION", "ACTIVE TKT", "STATUS");
             ConsoleUI.printDivider();
-            for (NetworkEngineer e : engineers) {
+            for (NetworkEngineer engineer : engineers) {
                 System.out.printf("  %-4d %-20s %-22s %-12d %-12s\n",
-                        e.getEngineerId(), e.getEngineerName(), e.getSpecialization(), e.getActiveTicketCount(), e.getAvailability());
+                        engineer.getEngineerId(), engineer.getFullName(), engineer.getSpecialization(), engineer.getActiveTicketCount(), engineer.getAvailability());
             }
             ConsoleUI.printPrompt("Enter Engineer ID (or 0 to Cancel)");
             String rawEng = scanner.nextLine().trim();
@@ -271,7 +282,7 @@ public class ServiceDeskController {
 
     private void monitorSLA() throws Exception {
         ConsoleUI.printHeader("Real-Time SLA Audit Telemetry", "Comprehensive scan of active tickets vs SLA deadlines");
-        List<com.amdocs.telecom.dto.SLAAuditResultDTO> auditList = slaMonitorService.performDetailedAudit();
+        List<SLAAuditResultDTO> auditList = slaMonitorService.performDetailedAudit();
         if (auditList.isEmpty()) {
             ConsoleUI.printSuccess("No open tickets found. All SLA targets 100% compliant.");
             return;
@@ -285,7 +296,7 @@ public class ServiceDeskController {
         int atRiskCount = 0;
         int onTrackCount = 0;
 
-        for (com.amdocs.telecom.dto.SLAAuditResultDTO r : auditList) {
+        for (SLAAuditResultDTO r : auditList) {
             String timeStr = r.getSlaDeadline() != null ? r.getSlaDeadline().format(DATE_FMT) : "N/A";
             String remTime;
             if (r.getRemainingMinutes() < 0) {

@@ -30,10 +30,10 @@ import java.time.temporal.ChronoUnit;
  */
 public class AuthenticationService {
     
-    private UserAccountDAO userAccountDAO;
-    private LoginHistoryDAO loginHistoryDAO;
-    private CaptchaGenerator captchaGenerator;
-    private OTPService otpService;
+    private final UserAccountDAO userAccountDAO;
+    private final LoginHistoryDAO loginHistoryDAO;
+    private CaptchaGenerator captchaGenerator; // session state — one user at a time
+    private OTPService otpService;             // session state — one user at a time
     
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final long LOCK_DURATION_MINUTES = 30;
@@ -197,14 +197,9 @@ public class AuthenticationService {
      * @param userId The user ID
      * @throws AuthenticationException if logout logging fails
      */
-    public void logout(int userId) throws AuthenticationException {
-        try {
-            // For now, we create a simple logout record
-            // In a real system, we'd update the logout_time of the last login record
-            System.out.println("[SYSTEM] User " + userId + " logged out successfully.");
-        } catch (Exception e) {
-            throw new AuthenticationException("Error logging out: " + e.getMessage(), e);
-        }
+    public void logout(int userId) {
+        // Logout acknowledgment handled by controller layer via ConsoleUI
+        // No server-side action needed in this single-user simulation
     }
     
     /**

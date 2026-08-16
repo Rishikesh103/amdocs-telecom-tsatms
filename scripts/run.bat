@@ -2,7 +2,7 @@
 set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-8.0.502.7-hotspot"
 set "PATH=%JAVA_HOME%\bin;C:\maven\bin;%PATH%"
 
-cd /d "%~dp0"
+cd /d "%~dp0\.."
 
 :loop
 cls
