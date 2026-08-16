@@ -9,7 +9,10 @@ import com.amdocs.telecom.dto.EngineerWorkloadDTO;
 import com.amdocs.telecom.exception.DAOException;
 import com.amdocs.telecom.util.DateUtil;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.stream.Collectors;
 
 public class ManagerServiceImpl implements ManagerService {
@@ -86,8 +89,33 @@ public class ManagerServiceImpl implements ManagerService {
     @Override
     public List<TroubleTicket> getEscalationQueue() throws DAOException {
         List<TroubleTicket> all = ticketDAO.findAll();
-        return all.stream()
-                .filter(t -> t.getStatus() == TicketStatus.ESCALATED)
-                .collect(Collectors.toList());
+        
+        // Case Study Section 9 Requirement: Critical tickets processed before lower-priority using PriorityQueue
+        PriorityQueue<TroubleTicket> queue = new PriorityQueue<>(Comparator.comparing(TroubleTicket::getPriority, (p1, p2) -> {
+            return Integer.compare(getPriorityRank(p2), getPriorityRank(p1));
+        }));
+
+        for (TroubleTicket t : all) {
+            if (t.getStatus() == TicketStatus.ESCALATED) {
+                queue.offer(t);
+            }
+        }
+
+        List<TroubleTicket> prioritizedList = new ArrayList<>();
+        while (!queue.isEmpty()) {
+            prioritizedList.add(queue.poll());
+        }
+        return prioritizedList;
+    }
+
+    private int getPriorityRank(Priority p) {
+        if (p == null) return 0;
+        switch (p) {
+            case CRITICAL: return 4;
+            case HIGH: return 3;
+            case MEDIUM: return 2;
+            case LOW: return 1;
+            default: return 0;
+        }
     }
 }

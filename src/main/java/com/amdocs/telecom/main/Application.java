@@ -93,9 +93,10 @@ public class Application {
             ConsoleUI.printMenuOption("2", "Service Desk Operations Console");
             ConsoleUI.printMenuOption("3", "Network Engineer Workbench");
             ConsoleUI.printMenuOption("4", "Network Operations Manager Dashboard");
-            ConsoleUI.printMenuOption("5", "Exit System");
+            ConsoleUI.printMenuOption("5", "Forgot Password / Reset Password");
+            ConsoleUI.printMenuOption("6", "Exit System");
             
-            ConsoleUI.printPrompt("Select option (1-5)");
+            ConsoleUI.printPrompt("Select option (1-6)");
             String choice = scanner.nextLine().trim();
             
             switch (choice) {
@@ -112,12 +113,55 @@ public class Application {
                     attemptLogin("NETWORK_MANAGER");
                     break;
                 case "5":
+                    handleForgotPassword();
+                    break;
+                case "6":
+                case "0":
                     System.out.println("\n" + ConsoleUI.CYAN + "Session closed. Thank you for using Amdocs TSATMS." + ConsoleUI.RESET);
                     running = false;
                     break;
                 default:
-                    ConsoleUI.printError("Invalid choice. Please select from 1 to 5.");
+                    ConsoleUI.printError("Invalid choice. Please select from 1 to 6 (or 0 to Exit).");
             }
+        }
+    }
+
+    private static void handleForgotPassword() {
+        try {
+            ConsoleUI.printHeader("Forgot Password / Account Recovery", "Secure OTP Password Reset");
+            ConsoleUI.printPrompt("Enter your Username (or 0 to Cancel)");
+            String username = scanner.nextLine().trim();
+            if ("0".equals(username) || "back".equalsIgnoreCase(username) || username.isEmpty()) {
+                ConsoleUI.printInfo("Password recovery canceled.");
+                return;
+            }
+
+            authService.requestPasswordReset(username);
+            String otp = authService.getOTPForDisplay();
+            ConsoleUI.printSection("Two-Factor OTP Security Challenge");
+            System.out.println("  One-Time Password (OTP): " + ConsoleUI.BOLD + otp + ConsoleUI.RESET + " [Simulated SMS/Email Gateway]");
+            System.out.println(ConsoleUI.DIM + "  Attempts remaining: " + authService.getOTPRemainingAttempts() + ConsoleUI.RESET);
+
+            ConsoleUI.printPrompt("Enter 6-digit OTP (or 0 to Cancel)");
+            String enteredOtp = scanner.nextLine().trim();
+            if ("0".equals(enteredOtp) || "back".equalsIgnoreCase(enteredOtp)) {
+                ConsoleUI.printInfo("Password recovery canceled.");
+                return;
+            }
+
+            if (!authService.validateOTP(enteredOtp)) {
+                ConsoleUI.printError("OTP verification failed. Remaining attempts: " + authService.getOTPRemainingAttempts());
+                return;
+            }
+            ConsoleUI.printSuccess("Identity verified.");
+
+            ConsoleUI.printPrompt("Enter New Password");
+            String newPassword = scanner.nextLine().trim();
+            authService.resetPassword(username, newPassword);
+            ConsoleUI.printSuccess("Password has been reset successfully! You can now log in with your new password.");
+
+        } catch (Exception e) {
+            ConsoleUI.printError("Password Reset Error: " + e.getMessage());
         }
     }
     
@@ -134,8 +178,12 @@ public class Application {
             String captchaCode = authService.startLogin();
             System.out.println("  CAPTCHA Code: " + ConsoleUI.BOLD + captchaCode + ConsoleUI.RESET + " (verification required)");
             
-            ConsoleUI.printPrompt("Enter CAPTCHA");
+            ConsoleUI.printPrompt("Enter CAPTCHA (or 0 to Cancel)");
             String captchaResponse = scanner.nextLine().trim();
+            if ("0".equals(captchaResponse) || "back".equalsIgnoreCase(captchaResponse)) {
+                ConsoleUI.printInfo("Authentication canceled. Returned to Main Menu.");
+                return;
+            }
             
             if (!authService.validateCaptcha(captchaResponse)) {
                 ConsoleUI.printError("CAPTCHA verification failed. Authentication canceled.");
@@ -145,10 +193,19 @@ public class Application {
             
             // Step 2: Username and Password
             ConsoleUI.printSection("Step 2: Account Credentials");
-            ConsoleUI.printPrompt("Username");
+            ConsoleUI.printPrompt("Username (or 0 to Cancel)");
             String username = scanner.nextLine().trim();
-            ConsoleUI.printPrompt("Password");
+            if ("0".equals(username) || "back".equalsIgnoreCase(username)) {
+                ConsoleUI.printInfo("Authentication canceled. Returned to Main Menu.");
+                return;
+            }
+
+            ConsoleUI.printPrompt("Password (or 0 to Cancel)");
             String password = scanner.nextLine().trim();
+            if ("0".equals(password) || "back".equalsIgnoreCase(password)) {
+                ConsoleUI.printInfo("Authentication canceled. Returned to Main Menu.");
+                return;
+            }
             
             if (!authService.verifyCredentials(username, password)) {
                 ConsoleUI.printError("Invalid username or password. Login canceled.");
@@ -162,8 +219,12 @@ public class Application {
             System.out.println("  One-Time Password (OTP): " + ConsoleUI.BOLD + otp + ConsoleUI.RESET + " [Simulated SMS/Email Gateway]");
             System.out.println(ConsoleUI.DIM + "  Attempts remaining: " + authService.getOTPRemainingAttempts() + ConsoleUI.RESET);
             
-            ConsoleUI.printPrompt("Enter 6-digit OTP");
+            ConsoleUI.printPrompt("Enter 6-digit OTP (or 0 to Cancel)");
             String otpResponse = scanner.nextLine().trim();
+            if ("0".equals(otpResponse) || "back".equalsIgnoreCase(otpResponse)) {
+                ConsoleUI.printInfo("Authentication canceled. Returned to Main Menu.");
+                return;
+            }
             
             if (!authService.validateOTP(otpResponse)) {
                 ConsoleUI.printError("OTP verification failed. Remaining attempts: " + authService.getOTPRemainingAttempts());

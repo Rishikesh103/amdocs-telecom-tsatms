@@ -12,7 +12,7 @@ import java.util.Scanner;
 
 /**
  * Customer Self-Service Portal Controller
- * Professional Enterprise Design
+ * Professional Enterprise Design with Interactive Ticket Selection
  */
 public class CustomerController {
 
@@ -41,10 +41,10 @@ public class CustomerController {
                     viewMyTickets(customerId);
                     break;
                 case "4":
-                    trackTicket(scanner);
+                    trackTicket(customerId, scanner);
                     break;
                 case "5":
-                    viewTicketHistory(scanner);
+                    viewTicketHistory(customerId, scanner);
                     break;
                 case "6":
                     viewNotifications(currentUser.getUsername());
@@ -53,10 +53,11 @@ public class CustomerController {
                     submitFeedback(customerId, scanner);
                     break;
                 case "8":
-                    ConsoleUI.printSuccess("Logged out successfully.");
+                case "0":
+                    ConsoleUI.printSuccess("Logged out successfully. Returned to main gateway.");
                     return false;
                 default:
-                    ConsoleUI.printError("Invalid option. Please try again.");
+                    ConsoleUI.printError("Invalid option. Please select 1-8 (or 0 to Sign Out).");
             }
         } catch (Exception e) {
             ConsoleUI.printError("Error processing request: " + e.getMessage());
@@ -89,45 +90,75 @@ public class CustomerController {
             return;
         }
 
-        ConsoleUI.printSection("Select Subscribed Service");
+        ConsoleUI.printSection("Step 1: Select Subscribed Service");
         for (int i = 0; i < services.size(); i++) {
             TelecomService s = services.get(i);
             System.out.printf("  [%d] %s (%s) - %s\n",
                     (i + 1), s.getServiceName(), s.getServiceCode(), s.getServiceType());
         }
-        ConsoleUI.printPrompt("Enter choice (1-" + services.size() + ")");
-        int sChoice = Integer.parseInt(scanner.nextLine().trim());
+        System.out.println("  [0] Cancel and return to menu");
+        
+        ConsoleUI.printPrompt("Enter choice (1-" + services.size() + " or 0 to Cancel)");
+        String rawChoice = scanner.nextLine().trim();
+        if ("0".equals(rawChoice) || "back".equalsIgnoreCase(rawChoice) || "exit".equalsIgnoreCase(rawChoice)) {
+            ConsoleUI.printInfo("Action canceled. Returning to Customer Portal.");
+            return;
+        }
+
+        int sChoice;
+        try {
+            sChoice = Integer.parseInt(rawChoice);
+        } catch (NumberFormatException e) {
+            ConsoleUI.printError("Invalid input. Ticket creation canceled.");
+            return;
+        }
+
         if (sChoice < 1 || sChoice > services.size()) {
-            ConsoleUI.printError("Invalid service selection.");
+            ConsoleUI.printError("Invalid service selection. Ticket creation canceled.");
             return;
         }
         TelecomService selectedService = services.get(sChoice - 1);
 
-        ConsoleUI.printSection("Incident Category");
+        ConsoleUI.printSection("Step 2: Incident Category");
         System.out.println("  [1] NETWORK_OUTAGE (Complete service disruption)");
         System.out.println("  [2] SLOW_DATA (Speed degradation)");
         System.out.println("  [3] CALL_DROP (Voice call disconnection)");
         System.out.println("  [4] BROADBAND (Fiber / Connectivity issues)");
         System.out.println("  [5] OTHER (General inquiry)");
-        ConsoleUI.printPrompt("Select category (1-5 or type name)");
+        System.out.println("  [0] Cancel");
+        ConsoleUI.printPrompt("Select category (1-5 or 0 to Cancel)");
         String category = scanner.nextLine().trim().toUpperCase();
+        if ("0".equals(category) || "BACK".equalsIgnoreCase(category)) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
         if (category.equals("1")) category = "NETWORK_OUTAGE";
         else if (category.equals("2")) category = "SLOW_DATA";
         else if (category.equals("3")) category = "CALL_DROP";
         else if (category.equals("4")) category = "BROADBAND";
         else if (category.equals("5")) category = "OTHER";
 
-        ConsoleUI.printSection("Issue Description");
-        ConsoleUI.printPrompt("Enter description");
+        ConsoleUI.printSection("Step 3: Issue Description");
+        ConsoleUI.printPrompt("Enter description (or 0 to Cancel)");
         String description = scanner.nextLine().trim();
+        if ("0".equals(description) || "back".equalsIgnoreCase(description)) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
 
-        ConsoleUI.printSection("Incident Priority");
+        ConsoleUI.printSection("Step 4: Incident Priority");
         System.out.println("  [1] LOW (Minor non-critical request)");
         System.out.println("  [2] MEDIUM (Standard service issue)");
         System.out.println("  [3] HIGH (Significant service disruption)");
         System.out.println("  [4] CRITICAL (Complete outage / Emergency)");
-        ConsoleUI.printPrompt("Select priority (1-4)");
+        System.out.println("  [0] Cancel");
+        ConsoleUI.printPrompt("Select priority (1-4 or 0 to Cancel)");
         String pChoice = scanner.nextLine().trim();
+        if ("0".equals(pChoice) || "back".equalsIgnoreCase(pChoice)) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
+
         Priority priority;
         switch (pChoice) {
             case "1": priority = Priority.LOW; break;
@@ -152,7 +183,7 @@ public class CustomerController {
         ConsoleUI.printHeader("My Trouble Tickets", "Incident status and history");
         List<TroubleTicket> tickets = ticketService.getTicketsByCustomerId(customerId);
         if (tickets.isEmpty()) {
-            ConsoleUI.printInfo("No trouble tickets found.");
+            ConsoleUI.printInfo("No trouble tickets found for your account.");
             return;
         }
         System.out.printf("  %-16s %-18s %-12s %-16s %-16s\n",
@@ -169,14 +200,58 @@ public class CustomerController {
         }
     }
 
-    private void trackTicket(Scanner scanner) throws Exception {
-        ConsoleUI.printPrompt("Enter Ticket Number (e.g. TT-2026-004521)");
-        String tktNum = scanner.nextLine().trim();
-        TroubleTicket ticket = ticketService.getTicketByNumber(tktNum);
-        if (ticket == null) {
-            ConsoleUI.printError("Ticket not found: " + tktNum);
-            return;
+    private TroubleTicket selectTicketFromList(int customerId, Scanner scanner, String headerTitle) throws Exception {
+        List<TroubleTicket> tickets = ticketService.getTicketsByCustomerId(customerId);
+        if (tickets.isEmpty()) {
+            ConsoleUI.printInfo("No trouble tickets found for your account.");
+            return null;
         }
+
+        ConsoleUI.printHeader(headerTitle, "Select from your registered tickets or enter a ticket number");
+        for (int i = 0; i < tickets.size(); i++) {
+            TroubleTicket t = tickets.get(i);
+            System.out.printf("  [%d] %-15s | %-16s | %-8s | %s\n",
+                    (i + 1),
+                    t.getTicketNumber(),
+                    t.getCategory(),
+                    ConsoleUI.getPriorityBadge(t.getPriority().name()),
+                    ConsoleUI.getStatusBadge(t.getStatus().name()));
+        }
+        System.out.println("  [0] Cancel / Go Back");
+
+        ConsoleUI.printPrompt("Select option (1-" + tickets.size() + ", Ticket #, or 0 to Cancel)");
+        String input = scanner.nextLine().trim();
+        if ("0".equals(input) || "back".equalsIgnoreCase(input) || input.isEmpty()) {
+            ConsoleUI.printInfo("Action canceled.");
+            return null;
+        }
+
+        // Check if numeric choice
+        try {
+            int idx = Integer.parseInt(input);
+            if (idx >= 1 && idx <= tickets.size()) {
+                return tickets.get(idx - 1);
+            }
+        } catch (NumberFormatException ignored) {}
+
+        // Fallback: search by ticket number or ID
+        TroubleTicket t = ticketService.getTicketByNumber(input);
+        if (t != null) return t;
+
+        try {
+            int id = Integer.parseInt(input);
+            t = ticketService.getTicketById(id);
+            if (t != null) return t;
+        } catch (NumberFormatException ignored) {}
+
+        ConsoleUI.printError("Ticket not found: " + input);
+        return null;
+    }
+
+    private void trackTicket(int customerId, Scanner scanner) throws Exception {
+        TroubleTicket ticket = selectTicketFromList(customerId, scanner, "Track Trouble Ticket Status");
+        if (ticket == null) return;
+
         ConsoleUI.printCard("Ticket Details: " + ticket.getTicketNumber(), Arrays.asList(
                 "Ticket ID    : " + ticket.getTicketId(),
                 "Category     : " + ticket.getCategory(),
@@ -190,14 +265,9 @@ public class CustomerController {
         ));
     }
 
-    private void viewTicketHistory(Scanner scanner) throws Exception {
-        ConsoleUI.printPrompt("Enter Ticket Number");
-        String tktNum = scanner.nextLine().trim();
-        TroubleTicket ticket = ticketService.getTicketByNumber(tktNum);
-        if (ticket == null) {
-            ConsoleUI.printError("Ticket not found: " + tktNum);
-            return;
-        }
+    private void viewTicketHistory(int customerId, Scanner scanner) throws Exception {
+        TroubleTicket ticket = selectTicketFromList(customerId, scanner, "View Ticket Audit History");
+        if (ticket == null) return;
 
         ConsoleUI.printHeader("Audit Trail: " + ticket.getTicketNumber(), "Lifecycle State Transitions");
         List<TicketStatusHistory> historyList = ticketService.getTicketHistory(ticket.getTicketId());
@@ -235,30 +305,29 @@ public class CustomerController {
     }
 
     private void submitFeedback(int customerId, Scanner scanner) throws Exception {
-        ConsoleUI.printHeader("Submit Service Feedback", "Rate ticket resolution quality");
-        ConsoleUI.printPrompt("Enter Ticket Number or ID (e.g. TT-2026-004521)");
-        String input = scanner.nextLine().trim();
-        int tktId;
-        try {
-            tktId = Integer.parseInt(input);
-        } catch (NumberFormatException e) {
-            TroubleTicket t = ticketService.getTicketByNumber(input);
-            if (t == null) {
-                ConsoleUI.printError("Ticket not found: " + input);
-                return;
-            }
-            tktId = t.getTicketId();
-        }
+        TroubleTicket ticket = selectTicketFromList(customerId, scanner, "Submit Customer Feedback");
+        if (ticket == null) return;
         
-        ConsoleUI.printPrompt("Enter Rating (1 to 5)");
-        int rating = Integer.parseInt(scanner.nextLine().trim());
+        ConsoleUI.printPrompt("Enter Rating (1 to 5, or 0 to Cancel)");
+        String rawRating = scanner.nextLine().trim();
+        if ("0".equals(rawRating) || "back".equalsIgnoreCase(rawRating)) {
+            ConsoleUI.printInfo("Feedback submission canceled.");
+            return;
+        }
+
+        int rating;
+        try {
+            rating = Integer.parseInt(rawRating);
+        } catch (NumberFormatException e) {
+            rating = 5;
+        }
         if (rating < 1) rating = 1;
         if (rating > 5) rating = 5;
 
         ConsoleUI.printPrompt("Enter Comments");
         String comments = scanner.nextLine().trim();
 
-        customerService.submitFeedback(tktId, customerId, rating, comments);
-        ConsoleUI.printSuccess("Feedback recorded. Thank you.");
+        customerService.submitFeedback(ticket.getTicketId(), customerId, rating, comments);
+        ConsoleUI.printSuccess("Feedback recorded for Ticket #" + ticket.getTicketNumber() + ". Thank you.");
     }
 }

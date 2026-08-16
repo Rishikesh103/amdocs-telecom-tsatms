@@ -89,12 +89,19 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         historyDAO.create(history);
 
         // Notify Admin & Customer
-        Notification notif = new Notification();
-        notif.setRecipientId("SERVICE_DESK");
-        notif.setTicketId(ticket.getTicketId());
-        notif.setMessage("New trouble ticket created: " + ticket.getTicketNumber() + " Priority: " + priority);
-        notif.setNotificationType(NotificationType.TICKET_CREATION);
-        notificationDAO.create(notif);
+        Notification notifAdmin = new Notification();
+        notifAdmin.setRecipientId("SERVICE_DESK");
+        notifAdmin.setTicketId(ticket.getTicketId());
+        notifAdmin.setMessage("New trouble ticket created: " + ticket.getTicketNumber() + " Priority: " + priority);
+        notifAdmin.setNotificationType(NotificationType.TICKET_CREATION);
+        notificationDAO.create(notifAdmin);
+
+        Notification notifCust = new Notification();
+        notifCust.setRecipientId("cust" + (100244 + customerId));
+        notifCust.setTicketId(ticket.getTicketId());
+        notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " (" + category + ") has been submitted successfully with priority " + priority + ".");
+        notifCust.setNotificationType(NotificationType.TICKET_CREATION);
+        notificationDAO.create(notifCust);
 
         return ticket;
     }
@@ -216,6 +223,14 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         notif.setNotificationType(NotificationType.ENGINEER_ASSIGNMENT);
         notificationDAO.create(notif);
 
+        // Notification to customer
+        Notification notifCust = new Notification();
+        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setTicketId(ticketId);
+        notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " has been assigned to Engineer " + selected.getEngineerName() + ".");
+        notifCust.setNotificationType(NotificationType.ENGINEER_ASSIGNMENT);
+        notificationDAO.create(notifCust);
+
         return selected;
     }
 
@@ -225,10 +240,9 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         if (ticket == null) throw new BusinessException("Ticket not found: " + ticketId);
 
         NetworkEngineer engineer = engineerDAO.findById(engineerId);
-        if (engineer == null) throw new BusinessException("Engineer not found with ID: " + engineerId);
+        if (engineer == null) throw new BusinessException("Engineer not found: " + engineerId);
 
         String oldStatus = ticket.getStatus().name();
-
         ticket.setAssignedEngineerId(engineerId);
         ticket.setStatus(TicketStatus.ASSIGNED);
         ticketDAO.update(ticket);
@@ -244,11 +258,25 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         history.setRemarks("Manually assigned to: " + engineer.getEngineerName());
         historyDAO.create(history);
 
+        Notification notif = new Notification();
+        notif.setRecipientId(engineer.getEmployeeCode());
+        notif.setTicketId(ticketId);
+        notif.setMessage("Ticket " + ticket.getTicketNumber() + " assigned to you manually by " + assignedBy);
+        notif.setNotificationType(NotificationType.ENGINEER_ASSIGNMENT);
+        notificationDAO.create(notif);
+
+        Notification notifCust = new Notification();
+        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setTicketId(ticketId);
+        notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " has been assigned to Engineer " + engineer.getEngineerName() + ".");
+        notifCust.setNotificationType(NotificationType.ENGINEER_ASSIGNMENT);
+        notificationDAO.create(notifCust);
+
         return true;
     }
 
     @Override
-    public boolean updateTicketStatus(int ticketId, TicketStatus newStatus, String changedBy, String remarks)
+    public boolean updateTicketStatus(int ticketId, TicketStatus newStatus, String updatedBy, String remarks)
             throws BusinessException, DAOException {
         TroubleTicket ticket = getTicketById(ticketId);
         if (ticket == null) throw new BusinessException("Ticket not found: " + ticketId);
@@ -261,9 +289,16 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         history.setTicketId(ticketId);
         history.setOldStatus(oldStatus);
         history.setNewStatus(newStatus.name());
-        history.setChangedBy(changedBy);
-        history.setRemarks(remarks);
+        history.setChangedBy(updatedBy);
+        history.setRemarks(remarks != null ? remarks : "Status updated");
         historyDAO.create(history);
+
+        Notification notifCust = new Notification();
+        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setTicketId(ticketId);
+        notifCust.setMessage("Status of ticket " + ticket.getTicketNumber() + " updated to " + newStatus.name() + ".");
+        notifCust.setNotificationType(NotificationType.TICKET_ASSIGNMENT);
+        notificationDAO.create(notifCust);
 
         return true;
     }
@@ -288,6 +323,13 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         history.setChangedBy(updatedBy);
         history.setRemarks("Priority updated to " + newPriority + ". " + remarks);
         historyDAO.create(history);
+
+        Notification notifCust = new Notification();
+        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setTicketId(ticketId);
+        notifCust.setMessage("Priority of ticket " + ticket.getTicketNumber() + " updated to " + newPriority.name() + ". New SLA: " + ticket.getSlaDeadline());
+        notifCust.setNotificationType(NotificationType.TICKET_ASSIGNMENT);
+        notificationDAO.create(notifCust);
 
         return true;
     }
@@ -321,6 +363,13 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         history.setRemarks("Resolution added: " + resolutionText);
         historyDAO.create(history);
 
+        Notification notifCust = new Notification();
+        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setTicketId(ticketId);
+        notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " has been RESOLVED. Resolution: " + resolutionText + ". Please rate your service experience.");
+        notifCust.setNotificationType(NotificationType.TICKET_RESOLUTION);
+        notificationDAO.create(notifCust);
+
         return true;
     }
 
@@ -350,6 +399,13 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         history.setRemarks("Escalated to " + toLevel + ": " + reason);
         historyDAO.create(history);
 
+        Notification notifMgr = new Notification();
+        notifMgr.setRecipientId("manager_nm1");
+        notifMgr.setTicketId(ticketId);
+        notifMgr.setMessage("ESCALATION ALERT: Ticket " + ticket.getTicketNumber() + " escalated to " + toLevel + ". Reason: " + reason);
+        notifMgr.setNotificationType(NotificationType.ESCALATION);
+        notificationDAO.create(notifMgr);
+
         return true;
     }
 
@@ -369,6 +425,13 @@ public class TroubleTicketServiceImpl implements TroubleTicketService {
         history.setChangedBy(closedBy);
         history.setRemarks(remarks);
         historyDAO.create(history);
+
+        Notification notifCust = new Notification();
+        notifCust.setRecipientId("cust" + (100244 + ticket.getCustomerId()));
+        notifCust.setTicketId(ticketId);
+        notifCust.setMessage("Your ticket " + ticket.getTicketNumber() + " has been closed. Thank you for choosing Amdocs Telecom.");
+        notifCust.setNotificationType(NotificationType.TICKET_CLOSURE);
+        notificationDAO.create(notifCust);
 
         return true;
     }

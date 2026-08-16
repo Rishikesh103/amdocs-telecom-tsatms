@@ -12,18 +12,20 @@ import java.util.Scanner;
 
 /**
  * Executive Network Manager Dashboard Controller
- * Professional Enterprise Design
+ * Professional Enterprise Design with Clean Back/Exit Navigation
  */
 public class ManagerController {
 
     private final ManagerService managerService;
     private final ReportService reportService;
     private final TroubleTicketService ticketService;
+    private final EngineerService engineerService;
 
     public ManagerController() {
         this.managerService = new ManagerServiceImpl();
         this.reportService = new ReportServiceImpl();
         this.ticketService = new TroubleTicketServiceImpl();
+        this.engineerService = new EngineerServiceImpl();
     }
 
     public boolean handleMenuChoice(String choice, UserAccount currentUser, Scanner scanner) {
@@ -45,10 +47,11 @@ public class ManagerController {
                     manageEscalations(currentUser.getUsername(), scanner);
                     break;
                 case "6":
-                    ConsoleUI.printSuccess("Logged out successfully.");
+                case "0":
+                    ConsoleUI.printSuccess("Logged out successfully. Returned to main gateway.");
                     return false;
                 default:
-                    ConsoleUI.printError("Invalid option. Please try again.");
+                    ConsoleUI.printError("Invalid option. Please select 1-6 (or 0 to Sign Out).");
             }
         } catch (Exception e) {
             ConsoleUI.printError("Managerial Telemetry Error: " + e.getMessage());
@@ -74,8 +77,8 @@ public class ManagerController {
         ConsoleUI.printHeader("Engineer Fleet Workload & Performance", "Resource Allocation Matrix");
         List<EngineerWorkloadDTO> list = managerService.getEngineerPerformance();
         
-        System.out.printf("  %-10s %-20s %-24s %-12s %-14s %-12s\n",
-                "EMP CODE", "ENGINEER NAME", "SPECIALIZATION", "ACTIVE TKT", "CRITICAL TKT", "STATUS");
+        System.out.printf("  %-4s %-10s %-20s %-24s %-12s %-14s %-12s\n",
+                "ID", "EMP CODE", "ENGINEER NAME", "SPECIALIZATION", "ACTIVE TKT", "CRITICAL TKT", "STATUS");
         ConsoleUI.printDivider();
         for (EngineerWorkloadDTO dto : list) {
             String availStr = dto.getAvailability() != null ? dto.getAvailability().name() : "AVAILABLE";
@@ -83,7 +86,8 @@ public class ManagerController {
                     ConsoleUI.GREEN + "AVAILABLE" + ConsoleUI.RESET : 
                     ConsoleUI.YELLOW + "BUSY" + ConsoleUI.RESET;
             
-            System.out.printf("  %-10s %-20s %-24s %-12d %-14d %s\n",
+            System.out.printf("  %-4d %-10s %-20s %-24s %-12d %-14d %s\n",
+                    dto.getEngineerId() != null ? dto.getEngineerId() : 0,
                     dto.getEmployeeCode(),
                     dto.getEngineerName(),
                     dto.getSpecialization(),
@@ -93,21 +97,43 @@ public class ManagerController {
         }
     }
 
+    private String promptReportFormat(Scanner scanner) {
+        ConsoleUI.printSection("Select Output Format");
+        System.out.println("  [1] Console Display (View on Screen)");
+        System.out.println("  [2] Plain Text File (.txt exported to reports/)");
+        System.out.println("  [3] CSV Spreadsheet (.csv exported to reports/)");
+        System.out.println("  [0] Cancel");
+        ConsoleUI.printPrompt("Select format (1-3 or 0 to Cancel)");
+        String rawFmt = scanner.nextLine().trim().toUpperCase();
+        if ("0".equals(rawFmt) || "BACK".equalsIgnoreCase(rawFmt) || rawFmt.isEmpty()) {
+            return null;
+        }
+        if ("2".equals(rawFmt) || "TXT".equalsIgnoreCase(rawFmt)) return "TXT";
+        if ("3".equals(rawFmt) || "CSV".equalsIgnoreCase(rawFmt)) return "CSV";
+        return "CONSOLE";
+    }
+
     private void generateSLAReport(Scanner scanner) throws Exception {
         ConsoleUI.printHeader("SLA Compliance Report", "Audit resolution time compliance");
-        ConsoleUI.printPrompt("Select Format (CONSOLE / TXT / CSV)");
-        String fmt = scanner.nextLine().trim().toUpperCase();
+        String fmt = promptReportFormat(scanner);
+        if (fmt == null) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
         String report = reportService.generateSlaComplianceReport(fmt);
-        ConsoleUI.printSuccess("Report generated successfully.");
+        ConsoleUI.printSuccess("Report generated successfully (" + fmt + " mode).");
         System.out.println("\n" + report);
     }
 
     private void generateIncidentReport(Scanner scanner) throws Exception {
         ConsoleUI.printHeader("Incident Analysis Report", "Historical breakdown by category");
-        ConsoleUI.printPrompt("Select Format (CONSOLE / TXT / CSV)");
-        String fmt = scanner.nextLine().trim().toUpperCase();
+        String fmt = promptReportFormat(scanner);
+        if (fmt == null) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
         String report = reportService.generateIncidentAnalysisReport(fmt);
-        ConsoleUI.printSuccess("Report generated successfully.");
+        ConsoleUI.printSuccess("Report generated successfully (" + fmt + " mode).");
         System.out.println("\n" + report);
     }
 
@@ -118,6 +144,20 @@ public class ManagerController {
             TroubleTicket t = ticketService.getTicketByNumber(input);
             if (t != null) return t.getTicketId();
             throw new Exception("Ticket not found: " + input);
+        }
+    }
+
+    private int resolveEngineerId(String input) throws Exception {
+        try {
+            return Integer.parseInt(input);
+        } catch (NumberFormatException e) {
+            List<NetworkEngineer> list = engineerService.getAllEngineers();
+            for (NetworkEngineer eng : list) {
+                if (eng.getEmployeeCode().equalsIgnoreCase(input)) {
+                    return eng.getEngineerId();
+                }
+            }
+            throw new Exception("Engineer not found for ID/Code: " + input);
         }
     }
 
@@ -140,11 +180,30 @@ public class ManagerController {
                     ConsoleUI.getStatusBadge(t.getStatus().name()));
         }
 
-        ConsoleUI.printPrompt("Enter Ticket Number or ID to reassign");
-        int tktId = resolveTicketId(scanner.nextLine().trim());
+        ConsoleUI.printPrompt("Enter Ticket Number or ID to reassign (or 0 to Cancel)");
+        String rawTkt = scanner.nextLine().trim();
+        if ("0".equals(rawTkt) || "back".equalsIgnoreCase(rawTkt) || rawTkt.isEmpty()) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
+        int tktId = resolveTicketId(rawTkt);
         
-        ConsoleUI.printPrompt("Enter Target Engineer ID");
-        int engId = Integer.parseInt(scanner.nextLine().trim());
+        List<NetworkEngineer> engineers = engineerService.getAllEngineers();
+        ConsoleUI.printSection("Available Network Engineer Fleet");
+        System.out.printf("  %-4s %-10s %-20s %-22s %-12s %-12s\n", "ID", "EMP CODE", "NAME", "SPECIALIZATION", "ACTIVE TKT", "STATUS");
+        ConsoleUI.printDivider();
+        for (NetworkEngineer e : engineers) {
+            System.out.printf("  %-4d %-10s %-20s %-22s %-12d %-12s\n",
+                    e.getEngineerId(), e.getEmployeeCode(), e.getEngineerName(), e.getSpecialization(), e.getActiveTicketCount(), e.getAvailability());
+        }
+
+        ConsoleUI.printPrompt("Enter Target Engineer ID or Employee Code (e.g., 1 or ENG1008) (or 0 to Cancel)");
+        String rawEng = scanner.nextLine().trim();
+        if ("0".equals(rawEng) || "back".equalsIgnoreCase(rawEng) || rawEng.isEmpty()) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
+        int engId = resolveEngineerId(rawEng);
 
         ticketService.assignEngineerManual(tktId, engId, managerName);
         ConsoleUI.printSuccess("Escalated ticket reassigned to Engineer #" + engId + ".");

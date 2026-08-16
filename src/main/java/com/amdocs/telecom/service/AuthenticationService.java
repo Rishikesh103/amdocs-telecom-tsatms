@@ -208,6 +208,42 @@ public class AuthenticationService {
     }
     
     /**
+     * Initiates password reset for a username, generating an OTP.
+     */
+    public boolean requestPasswordReset(String username) throws AuthenticationException {
+        try {
+            UserAccount account = userAccountDAO.findByUsername(username);
+            if (account == null) {
+                throw new AuthenticationException("Username not found: " + username);
+            }
+            otpService = new OTPService();
+            otpService.generateOTP();
+            return true;
+        } catch (DAOException e) {
+            throw new AuthenticationException("Error finding account: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Resets account password after OTP validation.
+     */
+    public boolean resetPassword(String username, String newPassword) throws AuthenticationException {
+        try {
+            UserAccount account = userAccountDAO.findByUsername(username);
+            if (account == null) {
+                throw new AuthenticationException("Username not found: " + username);
+            }
+            account.setPasswordHash(PasswordUtil.hashPassword(newPassword));
+            account.setFailedLoginAttempts(0);
+            account.setStatus(AccountStatus.ACTIVE);
+            account.setLockUntil(null);
+            return userAccountDAO.update(account);
+        } catch (DAOException e) {
+            throw new AuthenticationException("Error updating password: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Gets OTP for display (demo only - should not be exposed in production).
      * 
      * @return The OTP code

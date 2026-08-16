@@ -13,7 +13,7 @@ import java.util.Scanner;
 
 /**
  * Network Engineer Workbench Controller
- * Professional Enterprise Design
+ * Professional Enterprise Design with Interactive Ticket Selection
  */
 public class EngineerController {
 
@@ -36,22 +36,23 @@ public class EngineerController {
                     viewAssignedTickets(engineerId);
                     break;
                 case "2":
-                    updateTicketStatus(currentUser.getUsername(), scanner);
+                    updateTicketStatus(engineerId, currentUser.getUsername(), scanner);
                     break;
                 case "3":
                     addResolution(engineerId, scanner);
                     break;
                 case "4":
-                    viewTicketDetails(scanner);
+                    viewTicketDetails(engineerId, scanner);
                     break;
                 case "5":
                     checkSLAStatus(engineerId);
                     break;
                 case "6":
-                    ConsoleUI.printSuccess("Logged out successfully.");
+                case "0":
+                    ConsoleUI.printSuccess("Logged out successfully. Returned to main gateway.");
                     return false;
                 default:
-                    ConsoleUI.printError("Invalid option. Please try again.");
+                    ConsoleUI.printError("Invalid option. Please select 1-6 (or 0 to Sign Out).");
             }
         } catch (Exception e) {
             ConsoleUI.printError("Engineer Operation Failed: " + e.getMessage());
@@ -60,7 +61,7 @@ public class EngineerController {
     }
 
     private void viewAssignedTickets(int engineerId) throws Exception {
-        ConsoleUI.printHeader("Assigned Trouble Tickets", "Active incidents assigned to engineer #" + engineerId);
+        ConsoleUI.printHeader("Assigned Trouble Tickets", "Active incidents in your queue");
         List<TroubleTicket> tickets = engineerService.getAssignedTickets(engineerId);
         if (tickets.isEmpty()) {
             ConsoleUI.printSuccess("No assigned tickets. Your queue is clear.");
@@ -82,57 +83,119 @@ public class EngineerController {
         }
     }
 
-    private int resolveTicketId(String input) throws Exception {
-        try {
-            return Integer.parseInt(input);
-        } catch (NumberFormatException e) {
-            TroubleTicket t = ticketService.getTicketByNumber(input);
-            if (t != null) return t.getTicketId();
-            throw new Exception("Ticket not found: " + input);
+    private TroubleTicket selectAssignedTicket(int engineerId, Scanner scanner, String headerTitle) throws Exception {
+        List<TroubleTicket> tickets = engineerService.getAssignedTickets(engineerId);
+        if (tickets.isEmpty()) {
+            ConsoleUI.printInfo("No active assigned tickets found in your queue.");
+            return null;
         }
+
+        ConsoleUI.printHeader(headerTitle, "Select a ticket from your assigned queue or enter ticket number/ID");
+        for (int i = 0; i < tickets.size(); i++) {
+            TroubleTicket t = tickets.get(i);
+            System.out.printf("  [%d] %-15s | %-16s | %-8s | %s\n",
+                    (i + 1),
+                    t.getTicketNumber(),
+                    t.getCategory(),
+                    ConsoleUI.getPriorityBadge(t.getPriority().name()),
+                    ConsoleUI.getStatusBadge(t.getStatus().name()));
+        }
+        System.out.println("  [0] Cancel / Go Back");
+
+        ConsoleUI.printPrompt("Select option (1-" + tickets.size() + ", Ticket #, or 0 to Cancel)");
+        String input = scanner.nextLine().trim();
+        if ("0".equals(input) || "back".equalsIgnoreCase(input) || input.isEmpty()) {
+            ConsoleUI.printInfo("Action canceled.");
+            return null;
+        }
+
+        try {
+            int idx = Integer.parseInt(input);
+            if (idx >= 1 && idx <= tickets.size()) {
+                return tickets.get(idx - 1);
+            }
+        } catch (NumberFormatException ignored) {}
+
+        for (TroubleTicket t : tickets) {
+            if (t.getTicketNumber().equalsIgnoreCase(input)) return t;
+        }
+
+        try {
+            int id = Integer.parseInt(input);
+            for (TroubleTicket t : tickets) {
+                if (t.getTicketId() == id) return t;
+            }
+        } catch (NumberFormatException ignored) {}
+
+        // Global fallback search
+        TroubleTicket t = ticketService.getTicketByNumber(input);
+        if (t != null) return t;
+
+        ConsoleUI.printError("Ticket not found: " + input);
+        return null;
     }
 
-    private void updateTicketStatus(String engineerName, Scanner scanner) throws Exception {
-        ConsoleUI.printHeader("Update Ticket Status", "Transition ticket workflow status");
-        ConsoleUI.printPrompt("Enter Ticket Number or ID");
-        int tktId = resolveTicketId(scanner.nextLine().trim());
+    private void updateTicketStatus(int engineerId, String engineerName, Scanner scanner) throws Exception {
+        TroubleTicket ticket = selectAssignedTicket(engineerId, scanner, "Update Ticket Status");
+        if (ticket == null) return;
+        int tktId = ticket.getTicketId();
         
-        System.out.println("  [1] IN_PROGRESS (Investigation / Repair underway)");
+        ConsoleUI.printSection("Select Workflow State Transition");
+        System.out.println("  [1] IN_PROGRESS      (Investigation & active repairs underway)");
         System.out.println("  [2] PENDING_CUSTOMER (Awaiting customer input/confirmation)");
-        System.out.println("  [3] RESOLVED (Fix applied, pending closure)");
-        ConsoleUI.printPrompt("Select status (1-3)");
+        System.out.println("  [3] RESOLVED         (Fix applied, pending Service Desk closure)");
+        System.out.println("  [0] Cancel");
+        ConsoleUI.printPrompt("Select status (1-3 or 0 to Cancel)");
         String sChoice = scanner.nextLine().trim();
+        if ("0".equals(sChoice) || "back".equalsIgnoreCase(sChoice)) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
         TicketStatus newStatus = TicketStatus.IN_PROGRESS;
         if ("2".equals(sChoice)) newStatus = TicketStatus.PENDING_CUSTOMER;
         else if ("3".equals(sChoice)) newStatus = TicketStatus.RESOLVED;
 
-        ConsoleUI.printPrompt("Enter remarks");
+        ConsoleUI.printPrompt("Enter work log / diagnostic remarks");
         String remarks = scanner.nextLine().trim();
 
         ticketService.updateTicketStatus(tktId, newStatus, engineerName, remarks);
-        ConsoleUI.printSuccess("Status updated to " + newStatus + ".");
+        ConsoleUI.printSuccess("Status updated to " + newStatus + " for Ticket " + ticket.getTicketNumber() + ".");
     }
 
     private void addResolution(int engineerId, Scanner scanner) throws Exception {
-        ConsoleUI.printHeader("Submit Resolution & Root Cause", "Record resolution details for incident");
-        ConsoleUI.printPrompt("Enter Ticket Number or ID");
-        int tktId = resolveTicketId(scanner.nextLine().trim());
+        TroubleTicket ticket = selectAssignedTicket(engineerId, scanner, "Submit Resolution & Root Cause Analysis (RCA)");
+        if (ticket == null) return;
+        int tktId = ticket.getTicketId();
         
-        ConsoleUI.printPrompt("Enter Root Cause Analysis (RCA)");
+        ConsoleUI.printSection("Root Cause & Resolution Submission");
+        ConsoleUI.printPrompt("Enter Root Cause Analysis (RCA explanation)");
         String rootCause = scanner.nextLine().trim();
+        if ("0".equals(rootCause) || "back".equalsIgnoreCase(rootCause)) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
         
-        ConsoleUI.printPrompt("Enter Resolution Description");
+        ConsoleUI.printPrompt("Enter Corrective Action / Resolution Description");
         String resText = scanner.nextLine().trim();
+        if ("0".equals(resText) || "back".equalsIgnoreCase(resText)) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
 
-        System.out.println("\nResolution Classification Code:");
-        System.out.println("  [1] HARDWARE_FAILURE");
-        System.out.println("  [2] CONFIGURATION_ERROR");
-        System.out.println("  [3] NETWORK_CONGESTION");
-        System.out.println("  [4] SOFTWARE_FAILURE");
-        System.out.println("  [5] FIBER_CUT");
-        System.out.println("  [6] POWER_FAILURE");
-        ConsoleUI.printPrompt("Select code (1-6)");
+        ConsoleUI.printSection("Select Resolution Classification Code (Case Study Section 10)");
+        System.out.println("  [1] HARDWARE_FAILURE     (Router / Card / Switch replacement)");
+        System.out.println("  [2] CONFIGURATION_ERROR  (BGP / VLAN / Routing fix)");
+        System.out.println("  [3] NETWORK_CONGESTION   (Bandwidth throttled / QoS tuning)");
+        System.out.println("  [4] SOFTWARE_FAILURE     (Firmware bug / Service restart)");
+        System.out.println("  [5] FIBER_CUT            (Physical cable spliced / repaired)");
+        System.out.println("  [6] POWER_FAILURE        (UPS / Generator power restored)");
+        System.out.println("  [0] Cancel");
+        ConsoleUI.printPrompt("Select code (1-6 or 0 to Cancel)");
         String rChoice = scanner.nextLine().trim();
+        if ("0".equals(rChoice) || "back".equalsIgnoreCase(rChoice)) {
+            ConsoleUI.printInfo("Action canceled.");
+            return;
+        }
         ResolutionCode code = ResolutionCode.HARDWARE_FAILURE;
         switch (rChoice) {
             case "2": code = ResolutionCode.CONFIGURATION_ERROR; break;
@@ -143,54 +206,89 @@ public class EngineerController {
         }
 
         ticketService.addResolution(tktId, resText, rootCause, code, engineerId);
-        ConsoleUI.printSuccess("Resolution submitted. Ticket marked RESOLVED and engineer workload updated.");
+        ConsoleUI.printSuccess("Resolution submitted for Ticket " + ticket.getTicketNumber() + ".");
+        ConsoleUI.printCard("Resolution Confirmation", Arrays.asList(
+                "Ticket Number : " + ticket.getTicketNumber(),
+                "Status        : " + ConsoleUI.getStatusBadge("RESOLVED"),
+                "RCA Code      : " + code.name(),
+                "Root Cause    : " + rootCause,
+                "Action Taken  : " + resText,
+                "Workload      : Active queue count decremented"
+        ));
     }
 
-    private void viewTicketDetails(Scanner scanner) throws Exception {
-        ConsoleUI.printPrompt("Enter Ticket Number (e.g. TT-2026-004521)");
-        String num = scanner.nextLine().trim();
-        TroubleTicket t = ticketService.getTicketByNumber(num);
-        if (t == null) {
-            ConsoleUI.printError("Ticket not found: " + num);
-            return;
-        }
+    private void viewTicketDetails(int engineerId, Scanner scanner) throws Exception {
+        TroubleTicket t = selectAssignedTicket(engineerId, scanner, "View Ticket Technical Details");
+        if (t == null) return;
+
         ConsoleUI.printCard("Ticket Details: " + t.getTicketNumber(), Arrays.asList(
                 "Ticket ID    : " + t.getTicketId(),
                 "Category     : " + t.getCategory(),
-                "Description  : " + t.getDescription(),
                 "Priority     : " + ConsoleUI.getPriorityBadge(t.getPriority().name()),
                 "Status       : " + ConsoleUI.getStatusBadge(t.getStatus().name()),
+                "Description  : " + t.getDescription(),
+                "Created Date : " + (t.getCreatedDate() != null ? t.getCreatedDate().format(DATE_FMT) : "N/A"),
                 "SLA Deadline : " + (t.getSlaDeadline() != null ? t.getSlaDeadline().format(DATE_FMT) : "N/A"),
-                "Root Cause   : " + (t.getRootCause() != null ? t.getRootCause() : "In progress"),
+                "Root Cause   : " + (t.getRootCause() != null ? t.getRootCause() : "In progress / Diagnostic stage"),
                 "Resolution   : " + (t.getResolutionText() != null ? t.getResolutionText() : "Pending resolution")
         ));
     }
 
     private void checkSLAStatus(int engineerId) throws Exception {
-        ConsoleUI.printHeader("SLA Compliance Status", "Deadlines for assigned tickets");
+        ConsoleUI.printHeader("SLA Compliance Status & Deadlines", "Live countdown targets for tickets assigned to you");
         List<TroubleTicket> tickets = engineerService.getAssignedTickets(engineerId);
         if (tickets.isEmpty()) {
             ConsoleUI.printSuccess("No active tickets. All SLA targets compliant.");
             return;
         }
         
-        System.out.printf("  %-16s %-12s %-18s %-16s\n", "TICKET NUMBER", "PRIORITY", "SLA DEADLINE", "SLA HEALTH");
+        System.out.printf("  %-16s %-16s %-10s %-16s %-16s %-12s\n",
+                "TICKET NUMBER", "CATEGORY", "PRIORITY", "SLA DEADLINE", "REMAINING TIME", "SLA HEALTH");
         ConsoleUI.printDivider();
+        
+        LocalDateTime now = LocalDateTime.now();
+        int urgentCount = 0;
+        int breachedCount = 0;
+
         for (TroubleTicket t : tickets) {
+            String timeStr = t.getSlaDeadline() != null ? t.getSlaDeadline().format(DATE_FMT) : "N/A";
+            String remTime = "N/A";
             String risk;
-            if (t.getSlaDeadline() != null && t.getSlaDeadline().isBefore(LocalDateTime.now())) {
-                risk = ConsoleUI.BRIGHT_RED + "BREACHED" + ConsoleUI.RESET;
-            } else if (t.getSlaDeadline() != null && t.getSlaDeadline().minusMinutes(30).isBefore(LocalDateTime.now())) {
-                risk = ConsoleUI.BRIGHT_YELLOW + "AT_RISK (<30m)" + ConsoleUI.RESET;
+
+            if (t.getSlaDeadline() != null) {
+                long diffMinutes = java.time.Duration.between(now, t.getSlaDeadline()).toMinutes();
+                if (diffMinutes < 0) {
+                    remTime = ConsoleUI.RED + (diffMinutes * -1) + "m OVERDUE" + ConsoleUI.RESET;
+                    risk = ConsoleUI.BRIGHT_RED + "BREACHED" + ConsoleUI.RESET;
+                    breachedCount++;
+                } else if (diffMinutes <= 30) {
+                    remTime = ConsoleUI.YELLOW + diffMinutes + "m (Expires Soon)" + ConsoleUI.RESET;
+                    risk = ConsoleUI.BRIGHT_YELLOW + "AT_RISK (<30m)" + ConsoleUI.RESET;
+                    urgentCount++;
+                } else {
+                    long hrs = diffMinutes / 60;
+                    long mins = diffMinutes % 60;
+                    remTime = (hrs > 0 ? hrs + "h " : "") + mins + "m";
+                    risk = ConsoleUI.GREEN + "ON_TRACK" + ConsoleUI.RESET;
+                }
             } else {
                 risk = ConsoleUI.GREEN + "ON_TRACK" + ConsoleUI.RESET;
             }
             
-            System.out.printf("  %-16s %-12s %-18s %-16s\n",
+            System.out.printf("  %-16s %-16s %-10s %-16s %-16s %-12s\n",
                     t.getTicketNumber(),
+                    t.getCategory(),
                     ConsoleUI.getPriorityBadge(t.getPriority().name()),
-                    t.getSlaDeadline() != null ? t.getSlaDeadline().format(DATE_FMT) : "N/A",
+                    timeStr,
+                    remTime,
                     risk);
+        }
+
+        ConsoleUI.printDivider();
+        if (breachedCount > 0 || urgentCount > 0) {
+            ConsoleUI.printWarning("You have " + (breachedCount + urgentCount) + " ticket(s) requiring immediate attention to prevent SLA penalties.");
+        } else {
+            ConsoleUI.printSuccess("All assigned tickets are compliant and on schedule.");
         }
     }
 }
