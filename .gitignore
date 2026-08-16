@@ -1,0 +1,53 @@
+# =============================================
+# .gitignore for TSATMS Java Maven Project
+# =============================================
+
+# Maven build output
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE files — IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# IDE files — Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# IDE files — VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Reports output (generated at runtime)
+reports/*.csv
+reports/*.txt
+
+# Database config — DO NOT commit credentials
+# If you have a db.properties or config.properties with passwords, add here:
+# src/main/resources/config.properties
+
+# Compiled Java source
+*.class
+
+# Package files
+*.zip
+*.tar.gz
